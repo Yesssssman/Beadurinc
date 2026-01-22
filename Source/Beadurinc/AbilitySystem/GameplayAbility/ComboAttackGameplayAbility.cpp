@@ -62,7 +62,21 @@ bool UComboAttackGameplayAbility::CanActivateAbility
 	OUT FGameplayTagContainer* OptionalRelevantTags
 ) const
 {
-	return Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
+	if (!Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags))
+	{
+		return false;
+	}
+	
+	if (APlayerCharacter* AbilityOwner = Cast<APlayerCharacter>(ActorInfo->AvatarActor.Get()))
+	{
+		if (const UAbilitySystemComponent* ASC = AbilityOwner->GetAbilitySystemComponent())
+		{
+			// If State_ComboLocked exists, ability is not available
+			return !ASC->HasMatchingGameplayTag(StateGameplayTags::State_ComboLocked);
+		}
+	}
+	
+	return false;
 }
 
 /// Called on the ability being activated
@@ -86,21 +100,18 @@ void UComboAttackGameplayAbility::InputPressed
 	const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo
-) 
+)
 {
 	if (APlayerCharacter* AbilityOwner = Cast<APlayerCharacter>(ActorInfo->AvatarActor.Get()))
 	{
-		if (const UAbilitySystemComponent* ASC = AbilityOwner->GetAbilitySystemComponent())
+		// Check if the ability is available again
+		if (CanActivateAbility(Handle, ActorInfo))
 		{
-			// If State_ComboLocked exists, ability is not available
-			if (ASC->HasMatchingGameplayTag(StateGameplayTags::State_ComboLocked))
-			{
-				AbilityOwner->BufferInput(EAbilityId::Combo_Attack);
-			}
-			else
-			{
-				PlayNextComboAttack();
-			}
+			PlayNextComboAttack();
+		}
+		else
+		{
+			AbilityOwner->BufferInput(EAbilityId::Combo_Attack);
 		}
 	}
 }
