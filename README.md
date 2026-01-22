@@ -2,10 +2,9 @@
 
 ## UE: 5.7.1
 
-### Launch
+### Build & Launch
 
-Create a project named "Beadurinc"
-
-Overwrite Content folder in root
-
-Overwrite Source folder in root
+- Create a project named "Beadurinc"
+- Delete 'Content/', 'Source/', and 'Beadurinc.uproject' in the project's root
+- Pull repository
+- Right click 'Beadurinc.uproject' and select the menu 'Generate Visual studio project files'
