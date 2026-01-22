@@ -37,7 +37,6 @@
 *.out
 *.app
 *.sin
-*.uproject
 *.Dotsettings.user
 
 # debug information files
