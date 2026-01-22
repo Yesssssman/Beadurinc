@@ -108,12 +108,6 @@ private:
 	/** Combo counter */
 	int ComboCounter;
 	
-	/** Marker for next combo activation, prevents OnInterrupted callback cancels the combo counter */
-	bool bResetNextComboCounter;
-	
-	/** Checks if any buffered input exists */
-	//bool bInputBuffered;
-	
 	/** A timer handle to reset input buffer */
 	UPROPERTY()
 	UAbilityTask_PlayMontageAndWait* LastComboMontagePlayTask;

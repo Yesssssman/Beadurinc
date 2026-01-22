@@ -26,12 +26,9 @@ void UComboAttackGameplayAbility::PlayNextComboAttack()
 		// Add combo lock state
 		BCharacter->GetAbilitySystemComponent()->AddLooseGameplayTag(StateGameplayTags::State_ComboLocked);
 		
-		// When playing next combo sequence montage, prevents resetting combo counter by montage finish callback
-		bResetNextComboCounter = false;
-		
-		// Force terminate existing montage play task to prevent calling `EndAbility`
 		if (LastComboMontagePlayTask)
 		{
+			// Force cancel of the old task to prevent calling `EndAbility` abnormally
 			LastComboMontagePlayTask->ExternalCancel();
 		}
 		
@@ -158,13 +155,9 @@ void UComboAttackGameplayAbility::EndAbility
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 	
 	// "bResetNextComboCounter == false" means the next montage is combo sequence attack montage
-	if (bResetNextComboCounter)
-	{
-		ResetComboCounter();
-	}
+	ResetComboCounter();
 	
 	LastComboMontagePlayTask = nullptr;
-	bResetNextComboCounter = true;
 }
 
 /**
@@ -181,7 +174,6 @@ void UComboAttackGameplayAbility::OnMontageInterrupted()
 void UComboAttackGameplayAbility::OnMontageCompleted()
 {
 	// If montage reaches the last frame reset the combo counter
-	bResetNextComboCounter = true;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
 }
 
