@@ -1,0 +1,183 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "AbilitySystem/GameplayAbility/ComboAttackGameplayAbility.h"
+
+#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
+#include "Actor/Character/BeadurincCharacter.h"
+#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "AbilitySystem/AbilityId.h"
+#include "AbilitySystem/GameplayTag/StateGameplayTags.h"
+
+UComboAttackGameplayAbility::UComboAttackGameplayAbility()
+{
+	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+	ComboCounter = 0;
+}
+
+/** Plays next combo montage by ability task */
+void UComboAttackGameplayAbility::PlayNextComboAttack()
+{
+	ABeadurincCharacter* BCharacter = Cast<ABeadurincCharacter>(CurrentActorInfo->AvatarActor.Get());
+	
+	// Checks weapon in hand
+	if (BCharacter && BCharacter->IsHoldingWeapon())
+	{
+		// Add combo lock state
+		BCharacter->GetAbilitySystemComponent()->AddLooseGameplayTag(StateGameplayTags::State_ComboLocked);
+		
+		// When playing next combo sequence montage, prevents resetting combo counter by montage finish callback
+		bResetNextComboCounter = false;
+		
+		// Force terminate existing montage play task to prevent calling `EndAbility`
+		if (LastComboMontagePlayTask)
+		{
+			LastComboMontagePlayTask->ExternalCancel();
+		}
+		
+		// Triggers by play montage ability task (activates until montage ends)
+		UAbilityTask_PlayMontageAndWait* AT = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+			this,
+			TEXT("ComboAttack"),
+			BCharacter->GetMainHandWeaponActor()->GetComboAttackAt(ComboCounter)
+		);
+		
+		AT->OnCompleted.AddDynamic(this, &UComboAttackGameplayAbility::OnMontageCompleted);
+		AT->OnInterrupted.AddDynamic(this, &UComboAttackGameplayAbility::OnMontageInterrupted);
+		AT->ReadyForActivation();
+		LastComboMontagePlayTask = AT;
+		GEngine->AddOnScreenDebugMessage(-1, 3.0F, FColor::Green,  FString::Printf(TEXT("Combo %d"), ComboCounter));
+		// Clamp combo counter to combo montage array length
+		ComboCounter = (ComboCounter + 1) % BCharacter->GetMainHandWeaponActor()->GetComboSequenceLength();
+		BCharacter->ClearInputBuffer();
+	}
+}
+
+bool UComboAttackGameplayAbility::CanActivateAbility
+(
+	const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayTagContainer* SourceTags,
+	const FGameplayTagContainer* TargetTags,
+	OUT FGameplayTagContainer* OptionalRelevantTags
+) const
+{
+	return Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
+}
+
+/// Called on the ability being activated
+void UComboAttackGameplayAbility::ActivateAbility
+(
+	const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo,
+	const FGameplayEventData* TriggerEventData
+)
+{
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+	PlayNextComboAttack();
+}
+
+/**
+ * Called when the player press the ability key *while ability is activated*
+ */
+void UComboAttackGameplayAbility::InputPressed
+(
+	const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo
+) 
+{
+	if (ABeadurincCharacter* AbilityOwner = Cast<ABeadurincCharacter>(ActorInfo->AvatarActor.Get()))
+	{
+		if (const UAbilitySystemComponent* ASC = AbilityOwner->GetAbilitySystemComponent())
+		{
+			// If State_ComboLocked exists, ability is not available
+			if (ASC->HasMatchingGameplayTag(StateGameplayTags::State_ComboLocked))
+			{
+				AbilityOwner->BufferInput(EAbilityId::Combo_Attack);
+			}
+			else
+			{
+				PlayNextComboAttack();
+			}
+		}
+	}
+}
+
+/**
+ * Called when the player release the ability key *while ability is activated*
+ */
+void UComboAttackGameplayAbility::InputReleased
+(
+	const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo
+)
+{
+	Super::InputReleased(Handle, ActorInfo, ActivationInfo);
+}
+
+/**
+ * Called when the combo combo attack montage is done by force
+ */
+void UComboAttackGameplayAbility::CancelAbility
+(
+	const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo,
+	bool bReplicateCancelAbility
+)
+{
+	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
+}
+
+/**
+ * Called when the combo attack montage is done by reaching the last frame
+ */
+void UComboAttackGameplayAbility::EndAbility
+(
+	const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo,
+	bool bReplicateEndAbility,
+	bool bWasCancelled
+)
+{
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+	
+	// "bResetNextComboCounter == false" means the next montage is combo sequence attack montage
+	if (bResetNextComboCounter)
+	{
+		ResetComboCounter();
+	}
+	
+	LastComboMontagePlayTask = nullptr;
+	bResetNextComboCounter = true;
+}
+
+/**
+ * Montage interrupt callback by ability task
+ */
+void UComboAttackGameplayAbility::OnMontageInterrupted()
+{
+	CancelAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false);
+}
+
+/**
+ * Montage complete callback by ability task
+ */
+void UComboAttackGameplayAbility::OnMontageCompleted()
+{
+	// If montage reaches the last frame reset the combo counter
+	bResetNextComboCounter = true;
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
+}
+
+/**
+ * Reset combo counter to start combo from the first sequence
+ */
+void UComboAttackGameplayAbility::ResetComboCounter()
+{
+	ComboCounter = 0;
+}

@@ -36,6 +36,19 @@
 *.exe
 *.out
 *.app
+*.sin
+*.uproject
+*.Dotsettings.user
 
 # debug information files
 *.dwo
+
+# UE engine folders
+.idea
+.vs
+Binaries
+Config
+DerivedDataCache
+Intermediate
+Saved
+.vsconfig
