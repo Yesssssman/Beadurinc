@@ -21,7 +21,7 @@ void UFireBufferedInputAnimNotify::Notify
 		// Triggers the notify only in local client
 		if (OwnerCharacter->IsLocallyControlled())
 		{
-			OwnerCharacter->TriggerBufferedInput();
+			OwnerCharacter->FlushBufferedInput();
 		}
 	}
 }

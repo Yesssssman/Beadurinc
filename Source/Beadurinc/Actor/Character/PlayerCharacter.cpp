@@ -252,7 +252,7 @@ void APlayerCharacter::BufferInput(int32 InputID)
 }
 
 /** Tryna activate buffered input and flush the buffer */
-void APlayerCharacter::TriggerBufferedInput()
+void APlayerCharacter::FlushBufferedInput()
 {
 	// Checks buffered inputs in local client (to avoid unnecessary call)
 	if (IsLocallyControlled() && HasBufferedInput())

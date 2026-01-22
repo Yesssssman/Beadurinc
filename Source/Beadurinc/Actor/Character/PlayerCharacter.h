@@ -150,7 +150,7 @@ public:
 	virtual void BufferInput(int32 InputID);
 	
 	/** Tryna activate buffered input and flush the buffer */
-	virtual void TriggerBufferedInput();
+	virtual void FlushBufferedInput();
 	
 	/** Clear Input buffer */
 	virtual void ClearInputBuffer();
