@@ -8,7 +8,7 @@
 #include "AbilitySystem/AttributeSet/PlayerAttributeSet.h"
 #include "Actor/WeaponActor.h"
 #include "Logging/LogMacros.h"
-#include "BeadurincCharacter.generated.h"
+#include "PlayerCharacter.generated.h"
 
 // Allowed input buffering's lifetime. this means
 // only buffered inputs entered before 0.5 seconds are
@@ -34,7 +34,7 @@ typedef struct FBufferedInput
  *  Implements a controllable orbiting camera
  */
 UCLASS(abstract)
-class ABeadurincCharacter : public ACharacter, public IAbilitySystemInterface
+class APlayerCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -101,7 +101,7 @@ protected:
 public:
 
 	/** Constructor */
-	ABeadurincCharacter();	
+	APlayerCharacter();	
 
 protected:
 

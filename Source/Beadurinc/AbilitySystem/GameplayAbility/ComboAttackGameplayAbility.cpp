@@ -4,7 +4,7 @@
 #include "AbilitySystem/GameplayAbility/ComboAttackGameplayAbility.h"
 
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
-#include "Actor/Character/BeadurincCharacter.h"
+#include "Actor/Character/PlayerCharacter.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "AbilitySystem/AbilityId.h"
 #include "AbilitySystem/GameplayTag/StateGameplayTags.h"
@@ -18,7 +18,7 @@ UComboAttackGameplayAbility::UComboAttackGameplayAbility()
 /** Plays next combo montage by ability task */
 void UComboAttackGameplayAbility::PlayNextComboAttack()
 {
-	ABeadurincCharacter* BCharacter = Cast<ABeadurincCharacter>(CurrentActorInfo->AvatarActor.Get());
+	APlayerCharacter* BCharacter = Cast<APlayerCharacter>(CurrentActorInfo->AvatarActor.Get());
 	
 	// Checks weapon in hand
 	if (BCharacter && BCharacter->IsHoldingWeapon())
@@ -88,7 +88,7 @@ void UComboAttackGameplayAbility::InputPressed
 	const FGameplayAbilityActivationInfo ActivationInfo
 ) 
 {
-	if (ABeadurincCharacter* AbilityOwner = Cast<ABeadurincCharacter>(ActorInfo->AvatarActor.Get()))
+	if (APlayerCharacter* AbilityOwner = Cast<APlayerCharacter>(ActorInfo->AvatarActor.Get()))
 	{
 		if (const UAbilitySystemComponent* ASC = AbilityOwner->GetAbilitySystemComponent())
 		{

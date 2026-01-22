@@ -3,7 +3,7 @@
 
 #include "Animation/AnimNotify/StateWindowAnimNotifyState.h"
 
-#include "Actor/Character/BeadurincCharacter.h"
+#include "Actor/Character/PlayerCharacter.h"
 
 void UStateWindowAnimNotifyState::NotifyBegin
 (
@@ -13,7 +13,7 @@ void UStateWindowAnimNotifyState::NotifyBegin
 	const FAnimNotifyEventReference& EventReference
 )
 {
-	if (const ABeadurincCharacter* BCharacter = Cast<ABeadurincCharacter>(MeshComp->GetOwner()))
+	if (const APlayerCharacter* BCharacter = Cast<APlayerCharacter>(MeshComp->GetOwner()))
 	{
 		if (!BCharacter->GetAbilitySystemComponent()->HasMatchingGameplayTag(StateTag))
 		{
@@ -29,7 +29,7 @@ void UStateWindowAnimNotifyState::NotifyEnd
 	const FAnimNotifyEventReference& EventReference
 )
 {
-	if (const ABeadurincCharacter* BCharacter = Cast<ABeadurincCharacter>(MeshComp->GetOwner()))
+	if (const APlayerCharacter* BCharacter = Cast<APlayerCharacter>(MeshComp->GetOwner()))
 	{
 		if (BCharacter->GetAbilitySystemComponent()->HasMatchingGameplayTag(StateTag))
 		{

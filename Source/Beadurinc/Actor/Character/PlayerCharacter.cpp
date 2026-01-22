@@ -1,6 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "BeadurincCharacter.h"
+#include "PlayerCharacter.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -18,7 +18,7 @@
 #include "GameData/BeadurincPlayerState.h"
 
 /** Constructor */
-ABeadurincCharacter::ABeadurincCharacter()
+APlayerCharacter::APlayerCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -57,14 +57,14 @@ ABeadurincCharacter::ABeadurincCharacter()
 }
 
 /** On character join a world */
-void ABeadurincCharacter::BeginPlay()
+void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
 	if (HealthAttributeSet)
 	{
 		// Bind the delegate to HandleHealthChange
-		HealthAttributeSet->OnHealthChanged.AddDynamic(this, &ABeadurincCharacter::HandleHealthChange);
+		HealthAttributeSet->OnHealthChanged.AddDynamic(this, &APlayerCharacter::HandleHealthChange);
 	}
 	
 	// Spawn a weapon actor and attach to the hand
@@ -93,7 +93,7 @@ void ABeadurincCharacter::BeginPlay()
 }
 
 /** Called when a controller takes control of this character */
-void ABeadurincCharacter::PossessedBy(AController* NewController)
+void APlayerCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 	
@@ -115,7 +115,7 @@ void ABeadurincCharacter::PossessedBy(AController* NewController)
 	}
 }
 
-void ABeadurincCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
@@ -125,15 +125,15 @@ void ABeadurincCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		// Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ABeadurincCharacter::Move);
-		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &ABeadurincCharacter::Look);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
+		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
 
 		// Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABeadurincCharacter::Look);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
 		
 		// triggering & releasing GAS
-		EnhancedInputComponent->BindAction(ComboAttackAction, ETriggerEvent::Started, this, &ABeadurincCharacter::PressAbility, static_cast<int32>(EAbilityId::Combo_Attack));
-		EnhancedInputComponent->BindAction(ComboAttackAction, ETriggerEvent::Completed, this, &ABeadurincCharacter::ReleaseAbility, static_cast<int32>(EAbilityId::Combo_Attack));
+		EnhancedInputComponent->BindAction(ComboAttackAction, ETriggerEvent::Started, this, &APlayerCharacter::PressAbility, static_cast<int32>(EAbilityId::Combo_Attack));
+		EnhancedInputComponent->BindAction(ComboAttackAction, ETriggerEvent::Completed, this, &APlayerCharacter::ReleaseAbility, static_cast<int32>(EAbilityId::Combo_Attack));
 	}
 	else
 	{
@@ -141,7 +141,7 @@ void ABeadurincCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	}
 }
 
-void ABeadurincCharacter::Move(const FInputActionValue& Value)
+void APlayerCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
@@ -150,7 +150,7 @@ void ABeadurincCharacter::Move(const FInputActionValue& Value)
 	DoMove(MovementVector.X, MovementVector.Y);
 }
 
-void ABeadurincCharacter::Look(const FInputActionValue& Value)
+void APlayerCharacter::Look(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
@@ -159,7 +159,7 @@ void ABeadurincCharacter::Look(const FInputActionValue& Value)
 	DoLook(LookAxisVector.X, LookAxisVector.Y);
 }
 
-void ABeadurincCharacter::DoMove(float Right, float Forward)
+void APlayerCharacter::DoMove(float Right, float Forward)
 {
 	if (GetController() != nullptr)
 	{
@@ -179,7 +179,7 @@ void ABeadurincCharacter::DoMove(float Right, float Forward)
 	}
 }
 
-void ABeadurincCharacter::DoLook(float Yaw, float Pitch)
+void APlayerCharacter::DoLook(float Yaw, float Pitch)
 {
 	if (GetController() != nullptr)
 	{
@@ -189,19 +189,19 @@ void ABeadurincCharacter::DoLook(float Yaw, float Pitch)
 	}
 }
 
-void ABeadurincCharacter::DoJumpStart()
+void APlayerCharacter::DoJumpStart()
 {
 	// signal the character to jump
 	Jump();
 }
 
-void ABeadurincCharacter::DoJumpEnd()
+void APlayerCharacter::DoJumpEnd()
 {
 	// signal the character to stop jumping
 	StopJumping();
 }
 
-void ABeadurincCharacter::PressAbility(int32 InputId)
+void APlayerCharacter::PressAbility(int32 InputId)
 {
 	// Clear existing Buffered Input to prevent double execution
 	if (HasBufferedInput())
@@ -227,12 +227,12 @@ void ABeadurincCharacter::PressAbility(int32 InputId)
 	}
 }
 
-void ABeadurincCharacter::ReleaseAbility(int32 InputId)
+void APlayerCharacter::ReleaseAbility(int32 InputId)
 {
 	AbilitySystemComponent->AbilityLocalInputReleased(InputId);
 }
 
-void ABeadurincCharacter::HandleHealthChange(float Magnitude, float NewHealth)
+void APlayerCharacter::HandleHealthChange(float Magnitude, float NewHealth)
 {
 	GEngine->AddOnScreenDebugMessage(
 		-1,
@@ -246,13 +246,13 @@ void ABeadurincCharacter::HandleHealthChange(float Magnitude, float NewHealth)
 }
 
 /** Buffer an ability input by InputID */
-void ABeadurincCharacter::BufferInput(int32 InputID)
+void APlayerCharacter::BufferInput(int32 InputID)
 {
 	BufferedInput = {InputID, GetWorld()->GetTimeSeconds()};
 }
 
 /** Tryna activate buffered input and flush the buffer */
-void ABeadurincCharacter::TriggerBufferedInput()
+void APlayerCharacter::TriggerBufferedInput()
 {
 	// Checks buffered inputs in local client (to avoid unnecessary call)
 	if (IsLocallyControlled() && HasBufferedInput())
@@ -275,14 +275,14 @@ void ABeadurincCharacter::TriggerBufferedInput()
 }
 
 /** Clear Input buffer */
-void ABeadurincCharacter::ClearInputBuffer()
+void APlayerCharacter::ClearInputBuffer()
 {
 	// Clear the buffer
 	BufferedInput.Reset();
 }
 
 /** Checks if any buffered input exist */
-bool ABeadurincCharacter::HasBufferedInput()
+bool APlayerCharacter::HasBufferedInput()
 {
 	return BufferedInput.IsSet();
 }

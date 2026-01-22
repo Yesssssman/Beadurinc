@@ -3,7 +3,7 @@
 
 #include "Animation/AnimNotify/FireBufferedInputAnimNotify.h"
 
-#include "Actor/Character/BeadurincCharacter.h"
+#include "Actor/Character/PlayerCharacter.h"
 
 void UFireBufferedInputAnimNotify::Notify
 (
@@ -16,7 +16,7 @@ void UFireBufferedInputAnimNotify::Notify
 	
 	AActor* Owner = MeshComp->GetOwner();
 	
-	if (ABeadurincCharacter* OwnerCharacter = Cast<ABeadurincCharacter>(Owner))
+	if (APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(Owner))
 	{
 		// Triggers the notify only in local client
 		if (OwnerCharacter->IsLocallyControlled())
