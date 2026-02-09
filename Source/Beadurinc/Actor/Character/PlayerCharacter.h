@@ -47,8 +47,16 @@ class APlayerCharacter : public ACharacter, public IAbilitySystemInterface
 	UCameraComponent* FollowCamera;
 	
 	/** Gameplay Ability class for Combo Attacks */
-	UPROPERTY(EditAnywhere, Category = "Gameplay Abilities")
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
 	TSubclassOf<UGameplayAbility> ComboAttackAbility;
+	
+	/** Gameplay Ability class for Blocking */
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
+	TSubclassOf<UGameplayAbility> BlockAbility;
+	
+	/** Gameplay Ability class for Rolling */
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
+	TSubclassOf<UGameplayAbility> RollAbility;
 	
 	/** Gameplay Abilities */
     UPROPERTY()
@@ -74,9 +82,21 @@ class APlayerCharacter : public ACharacter, public IAbilitySystemInterface
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* MouseLookAction;
 	
-	/** Combo Attack Input Action */
+	/** Camera Lock Input Action */
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* CameraLockAction;
+	
+	/** Combo Attack Ability Input Action */
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* ComboAttackAction;
+	
+	/** Sword Blocking Ability Input Action */
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* BlockAction;
+	
+	/** Rolling Ability Input Action */
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* RollAction;
 	
 	UFUNCTION()
 	void HandleHealthChange(float Magnitude, float NewHealth);
@@ -92,11 +112,25 @@ protected:
 	UPROPERTY()
 	FGameplayAbilitySpecHandle ComboAbilitySpecHandler;
 	
-	/** Used by input buffering system */
-	TOptional<FBufferedInput> BufferedInput;
+	UPROPERTY()
+	FGameplayAbilitySpecHandle BlockAbilitySpecHandler;
+	
+	UPROPERTY()
+	FGameplayAbilitySpecHandle RollAbilitySpecHandler;
 	
 	UPROPERTY(EditAnywhere, Category="Attribute")
 	float InitialHealth;
+	
+private:
+	
+	/** Used by input buffering system */
+	TOptional<FBufferedInput> BufferedInput;
+	
+	/** A character being locked on by the player */
+	ACharacter* LockingOnCharacter;
+	
+	/** Used by camera lock on system */
+	bool bLockingOnCamera;
 	
 public:
 
@@ -108,6 +142,9 @@ protected:
 	/** On character first join the world **/
 	virtual void BeginPlay() override;
 
+	/** On every tick in a world */
+	virtual void Tick(float DeltaSeconds) override;
+	
 	/** Initialize input action bindings */
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -121,6 +158,9 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+	
+	/** Called for camera lock input */
+	void ToggleCamLock(const FInputActionValue& Value);
 
 	/** On pressed GAS ability input key */
 	void PressAbility(int32 AbilityID);
@@ -174,6 +214,15 @@ public:
 	
 	/** Returns Ability Component object **/
 	FORCEINLINE UAbilitySystemComponent* GetAbilitySystemComponent() const { return AbilitySystemComponent; };
+	
+	/** Updates camera rotation to align a target to crosshair */
+	void UpdateCameraLock(float DeltaTime);
+	
+	/** Locks the camera to given target */
+	void LockCamera(ACharacter* Target);
+	
+	/** Unlocks the camera if locked */
+	void UnlockCamera();
 	
 };
 

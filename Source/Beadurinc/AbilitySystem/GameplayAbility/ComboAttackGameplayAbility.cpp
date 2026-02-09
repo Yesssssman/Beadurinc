@@ -43,7 +43,7 @@ void UComboAttackGameplayAbility::PlayNextComboAttack()
 		AT->OnInterrupted.AddDynamic(this, &UComboAttackGameplayAbility::OnMontageInterrupted);
 		AT->ReadyForActivation();
 		LastComboMontagePlayTask = AT;
-		GEngine->AddOnScreenDebugMessage(-1, 3.0F, FColor::Green,  FString::Printf(TEXT("Combo %d"), ComboCounter));
+		
 		// Clamp combo counter to combo montage array length
 		ComboCounter = (ComboCounter + 1) % BCharacter->GetMainHandWeaponActor()->GetComboSequenceLength();
 		BCharacter->ClearInputBuffer();
@@ -108,7 +108,7 @@ void UComboAttackGameplayAbility::InputPressed
 		}
 		else
 		{
-			AbilityOwner->BufferInput(EAbilityId::Combo_Attack);
+			AbilityOwner->BufferInput(static_cast<int32>(EAbilityId::Combo_Attack));
 		}
 	}
 }

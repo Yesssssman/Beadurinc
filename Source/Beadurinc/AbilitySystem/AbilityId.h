@@ -1,7 +1,8 @@
 #pragma once
 
-typedef enum EAbilityId : int32
+enum class EAbilityId : int32
 {
 	Combo_Attack = 1,
-	Block
-} EAbilityId;
+	Block = 2,
+	Roll = 3
+};

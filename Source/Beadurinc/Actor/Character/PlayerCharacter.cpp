@@ -12,9 +12,10 @@
 #include "InputActionValue.h"
 #include "Actor/WeaponActor.h"
 #include "AbilitySystemComponent.h"
-#include "Beadurinc.h"
+#include "AncientKingCharacter.h"
 #include "AbilitySystem/AbilityId.h"
 #include "AbilitySystem/GameplayAbility/ComboAttackGameplayAbility.h"
+#include "EngineUtils.h"
 #include "GameData/BeadurincPlayerState.h"
 
 /** Constructor */
@@ -52,8 +53,7 @@ APlayerCharacter::APlayerCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 
-	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
-	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+	bLockingOnCamera = false;
 }
 
 /** On character join a world */
@@ -92,6 +92,25 @@ void APlayerCharacter::BeginPlay()
 	}
 }
 
+void APlayerCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	
+	if (bLockingOnCamera)
+	{
+		// When locking on character no longer valid, unlock the camera 
+		if (!IsValid(LockingOnCharacter))
+		{
+			UnlockCamera();
+		}
+		else
+		{
+			// Update rotation of the camera to look at the target
+			UpdateCameraLock(DeltaSeconds);
+		}
+	}
+}
+
 /** Called when a controller takes control of this character */
 void APlayerCharacter::PossessedBy(AController* NewController)
 {
@@ -101,17 +120,35 @@ void APlayerCharacter::PossessedBy(AController* NewController)
 	{
 		AbilitySystemComponent = BeadurincPlayerState->GetAbilitySystemComponent();
 		
+		// Clear old abilities
+		AbilitySystemComponent->ClearAllAbilities();
+		
 		// Reset ACS owner
 		AbilitySystemComponent->InitAbilityActorInfo(BeadurincPlayerState, this);
 		
 		// Initialize Health Attribute
 		AbilitySystemComponent->SetNumericAttributeBase(UPlayerAttributeSet::GetHealthAttribute(), InitialHealth);
 		
-		// Give Combo Attack Ability
-		FGameplayAbilitySpec AbilitySpec(ComboAttackAbility, 1, EAbilityId::Combo_Attack, this);
+		// Give combo attack ability
+		if (IsValid(ComboAttackAbility))
+		{
+			FGameplayAbilitySpec ComboAttackAbilitySpec(ComboAttackAbility, 1, static_cast<int32>(EAbilityId::Combo_Attack), this);
+			ComboAbilitySpecHandler = AbilitySystemComponent->GiveAbility(ComboAttackAbilitySpec);
+		}
 		
-		// Return Spec Handler to use outside
-		ComboAbilitySpecHandler = AbilitySystemComponent->GiveAbility(AbilitySpec);
+		// Give block ability
+		if (IsValid(BlockAbility))
+		{
+			FGameplayAbilitySpec BlockAbilitySpec(BlockAbility, 1, static_cast<int32>(EAbilityId::Block), this);
+			BlockAbilitySpecHandler = AbilitySystemComponent->GiveAbility(BlockAbilitySpec);
+		}
+		
+		// Give roll ability
+		if (IsValid(RollAbility))
+		{
+			FGameplayAbilitySpec RollAbilitySpec(RollAbility, 1, static_cast<int32>(EAbilityId::Roll), this);
+			RollAbilitySpecHandler = AbilitySystemComponent->GiveAbility(RollAbilitySpec);
+		}
 	}
 }
 
@@ -131,13 +168,19 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
 		
-		// triggering & releasing GAS
+		// Camera lock
+		EnhancedInputComponent->BindAction(CameraLockAction, ETriggerEvent::Started, this, &APlayerCharacter::ToggleCamLock);
+		
+		// Combo Attack Ability
 		EnhancedInputComponent->BindAction(ComboAttackAction, ETriggerEvent::Started, this, &APlayerCharacter::PressAbility, static_cast<int32>(EAbilityId::Combo_Attack));
 		EnhancedInputComponent->BindAction(ComboAttackAction, ETriggerEvent::Completed, this, &APlayerCharacter::ReleaseAbility, static_cast<int32>(EAbilityId::Combo_Attack));
-	}
-	else
-	{
-		UE_LOG(LogBeadurinc, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+		
+		// Blocking Ability
+		EnhancedInputComponent->BindAction(BlockAction, ETriggerEvent::Started, this, &APlayerCharacter::PressAbility, static_cast<int32>(EAbilityId::Block));
+		EnhancedInputComponent->BindAction(BlockAction, ETriggerEvent::Completed, this, &APlayerCharacter::ReleaseAbility, static_cast<int32>(EAbilityId::Block));
+		
+		// Rolling Ability
+		EnhancedInputComponent->BindAction(RollAction, ETriggerEvent::Started, this, &APlayerCharacter::PressAbility, static_cast<int32>(EAbilityId::Roll));
 	}
 }
 
@@ -157,6 +200,76 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 
 	// route the input
 	DoLook(LookAxisVector.X, LookAxisVector.Y);
+}
+
+void APlayerCharacter::ToggleCamLock(const FInputActionValue& Value)
+{
+	if (!bLockingOnCamera)
+	{
+		// To get a local player's controller, pass 0 to PlayerIndex
+		const APlayerController* PC = Cast<APlayerController>(GetController());
+		
+		if (!PC)
+		{
+			return;
+		}
+		
+		// Store the viewport size
+		int32 ViewX, ViewY;
+		PC->GetViewportSize(ViewX, ViewY);
+		
+		ACharacter* ClosestActorFromCrosshair = nullptr;
+		double ClosestDistance = 1000000000.0;
+		
+		// Iterates all actors
+		for (TActorIterator<ACharacter> It(GetWorld()); It; ++It)
+		{
+			ACharacter* Character = *It;
+			
+			// Skip the character that is invalid or if it's myself
+			if (!IsValid(Character) || Character == this)
+			{
+				continue;
+			}
+			
+			FVector2D ActorLocationInScreen;
+			
+			// Get a x, y coordinate of an actor in the screen 
+			const bool ConvertSucceeded = PC->ProjectWorldLocationToScreen(
+				Character->GetActorLocation(),
+				ActorLocationInScreen
+			);
+			
+			// A case that the target is not on the screen
+			if (!ConvertSucceeded)
+			{
+				continue;
+			}
+			
+			// Transform the left-top coord system into center-center
+			ActorLocationInScreen.X -= ViewX / 2;
+			ActorLocationInScreen.Y -= ViewY / 2;
+			
+			// Calculates distance
+			const double DistanceFromCrosshair = ActorLocationInScreen.SquaredLength();
+			
+			// Calculate the distance between center of the screen and an actor, if true, memorize the actor and distance
+			if (DistanceFromCrosshair < ClosestDistance)
+			{
+				ClosestActorFromCrosshair = Character;
+				ClosestDistance = DistanceFromCrosshair;
+			}
+		}
+		
+		// If found any nearest target, set locking true
+		if (ClosestActorFromCrosshair != nullptr)
+		{
+			LockCamera(ClosestActorFromCrosshair);
+			return;
+		}
+	}
+	
+	UnlockCamera();
 }
 
 void APlayerCharacter::DoMove(float Right, float Forward)
@@ -184,8 +297,8 @@ void APlayerCharacter::DoLook(float Yaw, float Pitch)
 	if (GetController() != nullptr)
 	{
 		// add yaw and pitch input to controller
-		AddControllerYawInput(Yaw);
-		AddControllerPitchInput(Pitch);
+		AddControllerYawInput(Yaw * (bLockingOnCamera ? 0.05F : 1.0F));
+		AddControllerPitchInput(Pitch * (bLockingOnCamera ? 0.05F : 1.0F));
 	}
 }
 
@@ -285,4 +398,57 @@ void APlayerCharacter::ClearInputBuffer()
 bool APlayerCharacter::HasBufferedInput()
 {
 	return BufferedInput.IsSet();
+}
+
+void APlayerCharacter::UpdateCameraLock(float DeltaTime)
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC) return;
+	
+	// Set camera rotation
+	FVector CameraLoc = PC->PlayerCameraManager->GetCameraLocation();
+	
+	// Add the half height of the target's collider to aim at the center of the target
+	FVector TargetLoc =	LockingOnCharacter->GetActorLocation();
+	TargetLoc.Y += LockingOnCharacter->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 0.3;
+
+	// Calculate rotator from vector camera -> target
+	FRotator DesiredRot = (TargetLoc - CameraLoc).Rotation();
+	FRotator CurrentRot = PC->GetControlRotation();
+	
+	// Get interpolated rotator by current rotation -> desired rotation
+	FRotator NewRot = FMath::RInterpTo(CurrentRot, DesiredRot, DeltaTime, 10.f);
+	
+	// Set to the calculated rotation
+	PC->SetControlRotation(NewRot);
+	
+	// Set camera rotation with the same principle
+	FVector ActorLoc = GetActorLocation();
+	FRotator DesiredActorRot = (TargetLoc - ActorLoc).Rotation();
+	FRotator CurrentActorRot = GetActorRotation();
+	FRotator NewActorRot = FMath::RInterpTo(CurrentActorRot, DesiredActorRot, DeltaTime, 10.f);
+	
+	// Do not rotate pitch
+	NewActorRot.Pitch = CurrentActorRot.Pitch;
+	
+	SetActorRotation(NewActorRot);
+}
+
+void APlayerCharacter::LockCamera(ACharacter* Target)
+{
+	if (!IsValid(Target))
+	{
+		return;
+	}
+	
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	bLockingOnCamera = true;
+	LockingOnCharacter = Target;
+}
+
+void APlayerCharacter::UnlockCamera()
+{
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	bLockingOnCamera = false;
+	LockingOnCharacter = nullptr;
 }
