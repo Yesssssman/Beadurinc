@@ -4,9 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "AbilitySystemInterface.h"
-#include "AbilitySystem/AttributeSet/PlayerAttributeSet.h"
-#include "Actor/WeaponActor.h"
+#include "FighterCharacter.h"
+#include "AbilitySystem/AttributeSet/LivingAttributeSet.h"
 #include "Logging/LogMacros.h"
 #include "PlayerCharacter.generated.h"
 
@@ -34,7 +33,7 @@ typedef struct FBufferedInput
  *  Implements a controllable orbiting camera
  */
 UCLASS(abstract)
-class APlayerCharacter : public ACharacter, public IAbilitySystemInterface
+class APlayerCharacter : public AFighterCharacter
 {
 	GENERATED_BODY()
 
@@ -45,26 +44,6 @@ class APlayerCharacter : public ACharacter, public IAbilitySystemInterface
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
-	
-	/** Gameplay Ability class for Combo Attacks */
-	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
-	TSubclassOf<UGameplayAbility> ComboAttackAbility;
-	
-	/** Gameplay Ability class for Blocking */
-	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
-	TSubclassOf<UGameplayAbility> BlockAbility;
-	
-	/** Gameplay Ability class for Rolling */
-	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
-	TSubclassOf<UGameplayAbility> RollAbility;
-	
-	/** Gameplay Abilities */
-    UPROPERTY()
-    TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
-	
-	/** Holding weapon */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Equipments", meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<AWeaponActor> MainHandWeapon;
 	
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, Category="Input")
@@ -97,29 +76,14 @@ class APlayerCharacter : public ACharacter, public IAbilitySystemInterface
 	/** Rolling Ability Input Action */
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* RollAction;
-	
-	UFUNCTION()
-	void HandleHealthChange(float Magnitude, float NewHealth);
 
 protected:
 	
-	UPROPERTY()
-	TObjectPtr<UPlayerAttributeSet> HealthAttributeSet;
+	/** Called when a new controller takes control of this character */
+	virtual void PossessedBy(AController* NewController) override;
 	
-	UPROPERTY()
-	TObjectPtr<AWeaponActor> MainHandWeaponActor;
-	
-	UPROPERTY()
-	FGameplayAbilitySpecHandle ComboAbilitySpecHandler;
-	
-	UPROPERTY()
-	FGameplayAbilitySpecHandle BlockAbilitySpecHandler;
-	
-	UPROPERTY()
-	FGameplayAbilitySpecHandle RollAbilitySpecHandler;
-	
-	UPROPERTY(EditAnywhere, Category="Attribute")
-	float InitialHealth;
+	/** On player state replicated in client side */
+	virtual void OnRep_PlayerState() override;
 	
 private:
 	
@@ -127,7 +91,7 @@ private:
 	TOptional<FBufferedInput> BufferedInput;
 	
 	/** A character being locked on by the player */
-	ACharacter* LockingOnCharacter;
+	TObjectPtr<ACharacter> LockingOnCharacter;
 	
 	/** Used by camera lock on system */
 	bool bLockingOnCamera;
@@ -139,17 +103,11 @@ public:
 
 protected:
 
-	/** On character first join the world **/
-	virtual void BeginPlay() override;
-
 	/** On every tick in a world */
 	virtual void Tick(float DeltaSeconds) override;
 	
 	/** Initialize input action bindings */
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	/** Called when a new controller takes control of this character */
-	virtual void PossessedBy(AController* NewController) override;
 
 protected:
 
@@ -205,15 +163,6 @@ public:
 
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
-	
-	/** Returns whether the character is holding weapon in main hand **/
-	FORCEINLINE bool IsHoldingWeapon() const { return IsValid(MainHandWeapon); }
-	
-	/** Returns Equipping Weapon Actor in main hand **/
-	FORCEINLINE TObjectPtr<AWeaponActor> GetMainHandWeaponActor() const { return MainHandWeaponActor; }
-	
-	/** Returns Ability Component object **/
-	FORCEINLINE UAbilitySystemComponent* GetAbilitySystemComponent() const { return AbilitySystemComponent; };
 	
 	/** Updates camera rotation to align a target to crosshair */
 	void UpdateCameraLock(float DeltaTime);

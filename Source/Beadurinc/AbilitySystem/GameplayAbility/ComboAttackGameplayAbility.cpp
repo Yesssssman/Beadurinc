@@ -36,7 +36,7 @@ void UComboAttackGameplayAbility::PlayNextComboAttack()
 		UAbilityTask_PlayMontageAndWait* AT = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 			this,
 			TEXT("ComboAttack"),
-			BCharacter->GetMainHandWeaponActor()->GetComboAttackAt(ComboCounter)
+			BCharacter->GetWeaponActor()->GetComboAttackAt(ComboCounter)
 		);
 		
 		AT->OnCompleted.AddDynamic(this, &UComboAttackGameplayAbility::OnMontageCompleted);
@@ -45,7 +45,7 @@ void UComboAttackGameplayAbility::PlayNextComboAttack()
 		LastComboMontagePlayTask = AT;
 		
 		// Clamp combo counter to combo montage array length
-		ComboCounter = (ComboCounter + 1) % BCharacter->GetMainHandWeaponActor()->GetComboSequenceLength();
+		ComboCounter = (ComboCounter + 1) % BCharacter->GetWeaponActor()->GetComboSequenceLength();
 		BCharacter->ClearInputBuffer();
 	}
 }

@@ -1,10 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include "RollGameplayAbility.h"
 #include "Actor/Character/PlayerCharacter.h"
 #include "AbilitySystem/GameplayTag/StateGameplayTags.h"
-
-#include "RollGameplayAbility.h"
-
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 
 URollGameplayAbility::URollGameplayAbility()
@@ -56,14 +54,14 @@ void URollGameplayAbility::ActivateAbility
 			RollingMontage
 		);
 		
-		AT->OnCompleted.AddDynamic(this, &URollGameplayAbility::End);
-		AT->OnInterrupted.AddDynamic(this, &URollGameplayAbility::End);
+		AT->OnCompleted.AddDynamic(this, &URollGameplayAbility::MontageEnds);
+		AT->OnInterrupted.AddDynamic(this, &URollGameplayAbility::MontageEnds);
 		AT->ReadyForActivation();
 	}
 }
 
 /** On rolling animation ends */
-void URollGameplayAbility::End()
+void URollGameplayAbility::MontageEnds()
 {
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }

@@ -10,7 +10,6 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
-#include "Actor/WeaponActor.h"
 #include "AbilitySystemComponent.h"
 #include "AncientKingCharacter.h"
 #include "AbilitySystem/AbilityId.h"
@@ -56,39 +55,42 @@ APlayerCharacter::APlayerCharacter()
 	bLockingOnCamera = false;
 }
 
-/** On character join a world */
-void APlayerCharacter::BeginPlay()
+// Handle server side respawn
+void APlayerCharacter::PossessedBy(AController* NewController)
 {
-	Super::BeginPlay();
+	Super::PossessedBy(NewController);
 	
-	if (HealthAttributeSet)
-	{
-		// Bind the delegate to HandleHealthChange
-		HealthAttributeSet->OnHealthChanged.AddDynamic(this, &APlayerCharacter::HandleHealthChange);
-	}
+	ABeadurincPlayerState* PS = GetPlayerState<ABeadurincPlayerState>();
 	
-	// Spawn a weapon actor and attach to the hand
-	if (GetMesh() && MainHandWeapon)
+	if (PS)
 	{
-		// Instigator != Owner under certain cases
-		// e.g. Player shots an arrow using bow: Arrow's owner == bow, but arrow's instigator == player
-		FActorSpawnParameters ActorSpawnParameters;
-		ActorSpawnParameters.Owner = this;
-		ActorSpawnParameters.Instigator = GetInstigator();
+		// Init ASC object holder from PlayerState to minimize nested access for it
+		AbilitySystemComponent = PS->GetAbilitySystemComponent();
+        
+		// Set the Owner to the PlayerState, and the Avatar to this Character
+		PS->GetAbilitySystemComponent()->InitAbilityActorInfo(PS, this);
 		
-		if (AWeaponActor* WeaponActor = GetWorld()->SpawnActor<AWeaponActor>(MainHandWeapon, ActorSpawnParameters))
-		{
-			// Initialize main hand weapon actor
-			MainHandWeaponActor = WeaponActor;
-			
-			WeaponActor->SetActorEnableCollision(false);
-			
-			WeaponActor->AttachToComponent(
-				GetMesh(),
-				FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-				TEXT("HandGrip_R")
-			);
-		}
+		// Reset stat values to their maximum. Only needs to be called in authorized side
+		// so they automatically be handled by GAS networking.
+		PS->ResetStats();
+	}
+}
+
+// Handle client side respawn
+void APlayerCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+	
+	ABeadurincPlayerState* PS = GetPlayerState<ABeadurincPlayerState>();
+	
+	if (PS)
+	{
+		// Extract ASC and AttributeSet from PlayerState to minimize nested accessing
+		AbilitySystemComponent = PS->GetAbilitySystemComponent();
+		AttributeSet = PS->GetAttributeSet();
+		
+		// Set owner as Player State since PlayerCharacter is transient object. (Destroyed on death)
+		AbilitySystemComponent->InitAbilityActorInfo(PS, this);
 	}
 }
 
@@ -98,7 +100,10 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 	
 	if (bLockingOnCamera)
 	{
-		// When locking on character no longer valid, unlock the camera 
+		// When locking on character no longer valid, unlock the camera
+		// Since check for object pointer is conducted in each tick we can ignore
+		// the error message, "Object member 'LockingOnCharacter' can be destroyed
+		// during garbage collection, resulting in a stale pointer"
 		if (!IsValid(LockingOnCharacter))
 		{
 			UnlockCamera();
@@ -107,47 +112,6 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 		{
 			// Update rotation of the camera to look at the target
 			UpdateCameraLock(DeltaSeconds);
-		}
-	}
-}
-
-/** Called when a controller takes control of this character */
-void APlayerCharacter::PossessedBy(AController* NewController)
-{
-	Super::PossessedBy(NewController);
-	
-	if (TObjectPtr<ABeadurincPlayerState> BeadurincPlayerState = Cast<ABeadurincPlayerState>(GetPlayerState()))
-	{
-		AbilitySystemComponent = BeadurincPlayerState->GetAbilitySystemComponent();
-		
-		// Clear old abilities
-		AbilitySystemComponent->ClearAllAbilities();
-		
-		// Reset ACS owner
-		AbilitySystemComponent->InitAbilityActorInfo(BeadurincPlayerState, this);
-		
-		// Initialize Health Attribute
-		AbilitySystemComponent->SetNumericAttributeBase(UPlayerAttributeSet::GetHealthAttribute(), InitialHealth);
-		
-		// Give combo attack ability
-		if (IsValid(ComboAttackAbility))
-		{
-			FGameplayAbilitySpec ComboAttackAbilitySpec(ComboAttackAbility, 1, static_cast<int32>(EAbilityId::Combo_Attack), this);
-			ComboAbilitySpecHandler = AbilitySystemComponent->GiveAbility(ComboAttackAbilitySpec);
-		}
-		
-		// Give block ability
-		if (IsValid(BlockAbility))
-		{
-			FGameplayAbilitySpec BlockAbilitySpec(BlockAbility, 1, static_cast<int32>(EAbilityId::Block), this);
-			BlockAbilitySpecHandler = AbilitySystemComponent->GiveAbility(BlockAbilitySpec);
-		}
-		
-		// Give roll ability
-		if (IsValid(RollAbility))
-		{
-			FGameplayAbilitySpec RollAbilitySpec(RollAbility, 1, static_cast<int32>(EAbilityId::Roll), this);
-			RollAbilitySpecHandler = AbilitySystemComponent->GiveAbility(RollAbilitySpec);
 		}
 	}
 }
@@ -343,19 +307,6 @@ void APlayerCharacter::PressAbility(int32 InputId)
 void APlayerCharacter::ReleaseAbility(int32 InputId)
 {
 	AbilitySystemComponent->AbilityLocalInputReleased(InputId);
-}
-
-void APlayerCharacter::HandleHealthChange(float Magnitude, float NewHealth)
-{
-	GEngine->AddOnScreenDebugMessage(
-		-1,
-		3.0F,
-		FColor::Red,
-		FString::Printf(
-			TEXT("Magnitude: %f, NewHealth: %f"),
-			Magnitude, NewHealth
-		)
-	);
 }
 
 /** Buffer an ability input by InputID */

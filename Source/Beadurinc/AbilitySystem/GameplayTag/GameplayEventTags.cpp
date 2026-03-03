@@ -3,5 +3,5 @@
 namespace GameplayEventTags
 {
 	/** GameplayTag generating macro */
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(EventTag_ComboWindowOpen, "EventTag.ComboWindowOpen", "Opens combo window");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Event_Combat_Hit, "Event.Combat.Hit", "Triggers hit event when AFighterActor hits another one");
 }

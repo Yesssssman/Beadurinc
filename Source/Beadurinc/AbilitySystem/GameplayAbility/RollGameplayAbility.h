@@ -48,5 +48,5 @@ private:
 	
 	/** On rolling animation ends */
 	UFUNCTION()
-	void End();
+	void MontageEnds();
 };

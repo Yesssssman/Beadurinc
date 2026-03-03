@@ -1,56 +1,48 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "AncientKingCharacter.h"
-#include "Actor/WeaponActor.h"
+#include "AbilitySystemComponent.h"
 
 // Sets default values
 AAncientKingCharacter::AAncientKingCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
+	
+	// Create GAS component
+	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	
+	// Replicated = true so client side ASC knows the updated values
+	AbilitySystemComponent->SetIsReplicated(true);
+	
+	// Full -> The GAS components will be replicated all tracking clients
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Full);
 }
 
-// Called when the game starts or when spawned
 void AAncientKingCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (IsValid(GetMesh()) && IsValid(MeleeWeapon))
+	// Initialize only in authorized side to let them replicated to clients by networking
+	if (HasAuthority())
 	{
-		FActorSpawnParameters SpawnParameters;
-		SpawnParameters.Owner = this;
-		SpawnParameters.Instigator = GetInstigator();
+		if (AttributeSetClass && AbilitySystemComponent)
+		{
+			// Create AttributeSet
+			// Note: AttributeSet data are initialized here unlike PlayerCharacter
+			UAttributeSet* CreatedAttributeSet = NewObject<UAttributeSet>(this, AttributeSetClass);
 		
-		// Spawn a weapon actor
-		AWeaponActor* SpawnedWeaponActor = GetWorld()->SpawnActor<AWeaponActor>(
-			MeleeWeapon,
-			SpawnParameters
-		);
-		
-		SpawnedWeaponActor->SetActorEnableCollision(false);
-		
-		// Attach the spawned actor to a bone socket
-		SpawnedWeaponActor->AttachToComponent(
-			GetMesh(),
-			FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-			TEXT("Right_Forehand_Socket")
-		);
+			AttributeSet = CreatedAttributeSet;
+			AbilitySystemComponent->AddAttributeSetSubobject(CreatedAttributeSet);
+		}
+	
+		// Initialize Actor Info
+		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+	
+		if (AbilitySystemComponent && InitialStatsTable)
+		{
+			// Initialize stats from data table 
+			AbilitySystemComponent->InitStats(AttributeSetClass, InitialStatsTable);
+		}
 	}
 }
-
-// Called every frame
-void AAncientKingCharacter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
-// Called to bind functionality to input
-void AAncientKingCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-}
-

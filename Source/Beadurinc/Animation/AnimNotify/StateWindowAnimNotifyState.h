@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -8,7 +6,10 @@
 #include "StateWindowAnimNotifyState.generated.h"
 
 /**
+ * A notify state for determining a character's state by FGameplayTag.
  * 
+ * At the beginning of notify, called on NotifyBegin, adds the pre-defined
+ * gameplay tag to the owner's gameplay ability system. 
  */
 UCLASS()
 class BEADURINC_API UStateWindowAnimNotifyState : public UAnimNotifyState

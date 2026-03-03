@@ -27,20 +27,7 @@ public class Beadurinc : ModuleRules
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 
 		PublicIncludePaths.AddRange(new string[] {
-			"Beadurinc",
-			"Beadurinc/Variant_Platforming",
-			"Beadurinc/Variant_Platforming/Animation",
-			"Beadurinc/Variant_Combat",
-			"Beadurinc/Variant_Combat/AI",
-			"Beadurinc/Variant_Combat/Animation",
-			"Beadurinc/Variant_Combat/Gameplay",
-			"Beadurinc/Variant_Combat/Interfaces",
-			"Beadurinc/Variant_Combat/UI",
-			"Beadurinc/Variant_SideScrolling",
-			"Beadurinc/Variant_SideScrolling/AI",
-			"Beadurinc/Variant_SideScrolling/Gameplay",
-			"Beadurinc/Variant_SideScrolling/Interfaces",
-			"Beadurinc/Variant_SideScrolling/UI"
+			"Beadurinc"
 		});
 
 		// Uncomment if you are using Slate UI
