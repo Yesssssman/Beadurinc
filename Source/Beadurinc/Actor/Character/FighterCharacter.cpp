@@ -1,7 +1,6 @@
 #include "FighterCharacter.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
-#include "GameplayEffectTypes.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/GameplayTag/GameplayEventTags.h"
 #include "Components/CapsuleComponent.h"
@@ -75,6 +74,7 @@ void AFighterCharacter::OnMeleeContacts
 	EventContext.Target = OtherActor;
 	EventContext.OptionalObject = GetWeaponActor();
 	EventContext.EventMagnitude = GetWeaponActor()->GetWeaponBaseDamage();
+	EventContext.ContextHandle = GetAbilitySystemComponent()->MakeEffectContext();
 	
 	// Calculates the first hit location by the ray trace result calculated by "my collider center -> opponent's collider center"
 	FHitResult PreciseHit;
@@ -89,11 +89,8 @@ void AFighterCharacter::OnMeleeContacts
 		QueryParams
 	);
 	
-	FGameplayAbilityTargetDataHandle TargetDataHandle;
-	FGameplayAbilityTargetData_SingleTargetHit* NewData = new FGameplayAbilityTargetData_SingleTargetHit(PreciseHit);
-	TargetDataHandle.Add(NewData);
 	// Store the line tracing result to event context (this is used by creating Sound Cue and particles)
-	EventContext.TargetData = TargetDataHandle;
+	EventContext.ContextHandle.AddHitResult(PreciseHit);
 	
 	// Trigger the event
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(OtherActor, GameplayEventTags::Event_Combat_Hit, EventContext);

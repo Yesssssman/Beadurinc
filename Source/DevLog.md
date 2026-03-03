@@ -16,9 +16,9 @@
 
 ## PlayerCharacter
 
-- 플레이어가 빙의되는 캐릭터
+- 플레이어 컨트롤러에 의해 조작되는 캐릭터
 - EnhancedInput을 통해 Character갸 컨트롤됨
-- InputBuffering 시스템이 적용되어 BufferWindow 시간 전에
+- InputBuffering 시스템이 적용되어 BufferWindow동안 입력 가능 상태가 되면 자동으로 입력된 어빌리티를 발동시킴
 
 # Gameplay Abilities
 

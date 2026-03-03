@@ -4,5 +4,6 @@ enum class EAbilityId : int32
 {
 	Combo_Attack = 1,
 	Block = 2,
-	Roll = 3
+	Roll = 3,
+	Hit_React = 4,
 };

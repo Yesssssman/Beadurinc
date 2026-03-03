@@ -22,6 +22,10 @@ class BEADURINC_API UHitReactGameplayAbility : public UGameplayAbility
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimMontage> OnHurt;
 	
+	/** Whether the owner actor should look at attacker on hit */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Control", meta = (AllowPrivateAccess = "true"))
+	bool LookAttacker;
+	
 protected:
 	/**
 	 * Checks whether the actor blocks the attack or gets hurt

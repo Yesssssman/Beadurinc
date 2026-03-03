@@ -2,6 +2,7 @@
 
 #include "AncientKingCharacter.h"
 #include "AbilitySystemComponent.h"
+#include "AbilitySystem/AbilityId.h"
 
 // Sets default values
 AAncientKingCharacter::AAncientKingCharacter()
@@ -24,25 +25,28 @@ void AAncientKingCharacter::BeginPlay()
 	Super::BeginPlay();
 	
 	// Initialize only in authorized side to let them replicated to clients by networking
-	if (HasAuthority())
+	if (AbilitySystemComponent && HasAuthority())
 	{
-		if (AttributeSetClass && AbilitySystemComponent)
+		if (AttributeSetClass)
 		{
 			// Create AttributeSet
 			// Note: AttributeSet data are initialized here unlike PlayerCharacter
 			UAttributeSet* CreatedAttributeSet = NewObject<UAttributeSet>(this, AttributeSetClass);
-		
+			
 			AttributeSet = CreatedAttributeSet;
 			AbilitySystemComponent->AddAttributeSetSubobject(CreatedAttributeSet);
 		}
-	
+		
 		// Initialize Actor Info
 		AbilitySystemComponent->InitAbilityActorInfo(this, this);
-	
-		if (AbilitySystemComponent && InitialStatsTable)
+		
+		if (InitialStatsTable)
 		{
 			// Initialize stats from data table 
 			AbilitySystemComponent->InitStats(AttributeSetClass, InitialStatsTable);
 		}
+		
+		FGameplayAbilitySpec HitReactSpec(HitReactAbility, 1, static_cast<int32>(EAbilityId::Hit_React), this);
+		AbilitySystemComponent->GiveAbility(HitReactSpec);
 	}
 }

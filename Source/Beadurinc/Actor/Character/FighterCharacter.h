@@ -25,11 +25,11 @@ class BEADURINC_API AFighterCharacter : public ACharacter, public IAbilitySystem
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Equipments", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<AWeaponActor> WeaponActorBlueprint;
 	
+protected:
+	
 	/** Gameplay Ability class for Hit React */
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
 	TSubclassOf<UGameplayAbility> HitReactAbility;
-	
-protected:
 	
 	/** Gameplay Ability System Component */
 	UPROPERTY()
