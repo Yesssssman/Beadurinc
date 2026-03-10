@@ -47,6 +47,13 @@ void UHitReactGameplayAbility::ActivateAbility
 			OwnerACS->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.MeleeHurt")), CueParams);
 		}
 		
+		// Apply Hit Stop if the interacting actors are fighters
+		if (AFighterCharacter* Attacker = Cast<AFighterCharacter>(CueParams.Instigator))
+		{
+			Attacker->AddHitActor(OwnerCharacter);
+			Attacker->HitStopForTime(HitStop);
+		}
+		
 		// Makes the actor look at attacker (for monsters)
 		if (LookAttacker)
 		{

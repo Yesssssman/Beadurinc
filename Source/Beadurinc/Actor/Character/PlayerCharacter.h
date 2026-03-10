@@ -53,6 +53,10 @@ class APlayerCharacter : public AFighterCharacter
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* MoveAction;
 
+	/** Run Input Action */
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* RunAction;
+	
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* LookAction;
@@ -96,10 +100,13 @@ private:
 	/** Used by camera lock on system */
 	bool bLockingOnCamera;
 	
+	/** Running state */
+	bool bRunning;
+	
 public:
 
 	/** Constructor */
-	APlayerCharacter();	
+	APlayerCharacter();
 
 protected:
 
@@ -114,6 +121,9 @@ protected:
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
 
+	/** Called for runnig input */
+	void Run(const FInputActionValue& Value);
+	
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 	

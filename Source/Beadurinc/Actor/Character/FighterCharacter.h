@@ -10,6 +10,7 @@
 class UAbilitySystemComponent;
 class UAttributeSet;
 class UGameplayEffect;
+class UMotionWarpingComponent;
 
 /// Characters can attack, be hurt, die as results of interactions by WeaponActor
 /// in their hand socket belongs to their skeleton.
@@ -31,6 +32,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
 	TSubclassOf<UGameplayAbility> HitReactAbility;
 	
+	/** Motion warping component to track target actor precisely while playing attack animations */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;
+	
 	/** Gameplay Ability System Component */
 	UPROPERTY()
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
@@ -45,6 +50,11 @@ protected:
 	
 	/** List of Actors that hit by "current swing" */
 	TSet<TObjectPtr<AActor>> HitActors;
+	
+public:
+	
+	/** Constructor */
+	AFighterCharacter();
 	
 protected:
 	/** On character first join the world */
@@ -63,7 +73,15 @@ protected:
 	);
 	
 public:
+	
+	/** Adds an actor to ignoring entry to avoid hitting same actor twice per swing */
+	void AddHitActor(TObjectPtr<AActor> Opponent);
+	
+	/** Remove all registered ignoring actors */
 	void ResetMeleeSwing();
+	
+	/** Apply Hit Stop on melee strike */
+	void HitStopForTime(const float StopTime);
 	
 	/** Returns whether the character is holding weapon in main hand **/
 	FORCEINLINE virtual bool IsHoldingWeapon() const override { return IsValid(WeaponActorInstance); }

@@ -13,8 +13,8 @@
 #include "AbilitySystemComponent.h"
 #include "AncientKingCharacter.h"
 #include "AbilitySystem/AbilityId.h"
-#include "AbilitySystem/GameplayAbility/ComboAttackGameplayAbility.h"
 #include "EngineUtils.h"
+#include "MotionWarpingComponent.h"
 #include "GameData/BeadurincPlayerState.h"
 
 /** Constructor */
@@ -60,9 +60,7 @@ void APlayerCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 	
-	ABeadurincPlayerState* PS = GetPlayerState<ABeadurincPlayerState>();
-	
-	if (PS)
+	if (ABeadurincPlayerState* PS = GetPlayerState<ABeadurincPlayerState>())
 	{
 		// Init ASC object holder from PlayerState to minimize nested access for it
 		AbilitySystemComponent = PS->GetAbilitySystemComponent();
@@ -81,9 +79,7 @@ void APlayerCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 	
-	ABeadurincPlayerState* PS = GetPlayerState<ABeadurincPlayerState>();
-	
-	if (PS)
+	if (ABeadurincPlayerState* PS = GetPlayerState<ABeadurincPlayerState>())
 	{
 		// Extract ASC and AttributeSet from PlayerState to minimize nested accessing
 		AbilitySystemComponent = PS->GetAbilitySystemComponent();
@@ -114,6 +110,28 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 			UpdateCameraLock(DeltaSeconds);
 		}
 	}
+	
+	if (bRunning)
+	{
+		FVector Velocity = GetVelocity();
+		
+		// Reset running state and max walk speed if current velocity is under movement threshold
+		if (Velocity.SquaredLength() < 0.025F)
+		{
+			GetCharacterMovement()->MaxWalkSpeed = 200.0F;
+			bRunning = false;
+		}
+		
+		// Normalize the velocity before calculating dot product
+		Velocity.Normalize(0.05);
+		
+		// Prevents the player running backward
+		if (FVector::DotProduct(GetActorForwardVector(), Velocity) <= -0.5F)
+		{
+			GetCharacterMovement()->MaxWalkSpeed = 200.0F;
+			bRunning = false;
+		}
+	}
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -127,6 +145,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
+		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Started, this, &APlayerCharacter::Run);
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
 
 		// Looking
@@ -155,6 +174,15 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 
 	// route the input
 	DoMove(MovementVector.X, MovementVector.Y);
+}
+
+void APlayerCharacter::Run(const FInputActionValue& Value)
+{
+	// assign new max walk speed based on running state
+	GetCharacterMovement()->MaxWalkSpeed = bRunning ? 200.0F : 500.0F;
+	
+	// toggle running state
+	bRunning = !bRunning;
 }
 
 void APlayerCharacter::Look(const FInputActionValue& Value)
@@ -383,6 +411,25 @@ void APlayerCharacter::UpdateCameraLock(float DeltaTime)
 	NewActorRot.Pitch = CurrentActorRot.Pitch;
 	
 	SetActorRotation(NewActorRot);
+	
+	// Update the location of Motion Warping target
+	FMotionWarpingTarget MotionWarpingTarget;
+	MotionWarpingTarget.Location = LockingOnCharacter->GetActorLocation();
+	
+	UCapsuleComponent* OwnerCapsuleComponent = GetCapsuleComponent();
+	UCapsuleComponent* TargetCapsuleComponent = LockingOnCharacter->GetCapsuleComponent();
+	
+	// Push the target location toward myself, by the distance that equals to the radius of target's capsule component (if exists)
+	if (OwnerCapsuleComponent && TargetCapsuleComponent)
+	{
+		FVector FromTargetToMyself = GetActorLocation() - LockingOnCharacter->GetActorLocation();
+		FromTargetToMyself.Normalize(0.05F);
+		FromTargetToMyself *= OwnerCapsuleComponent->GetScaledCapsuleRadius() + TargetCapsuleComponent->GetScaledCapsuleRadius();
+		MotionWarpingTarget.Location += FromTargetToMyself;
+	}
+	
+	MotionWarpingTarget.Name = TEXT("AttackTarget");
+	MotionWarpingComponent->AddOrUpdateWarpTarget(MotionWarpingTarget);
 }
 
 void APlayerCharacter::LockCamera(ACharacter* Target)
@@ -393,6 +440,7 @@ void APlayerCharacter::LockCamera(ACharacter* Target)
 	}
 	
 	GetCharacterMovement()->bOrientRotationToMovement = false;
+	
 	bLockingOnCamera = true;
 	LockingOnCharacter = Target;
 }
@@ -402,4 +450,5 @@ void APlayerCharacter::UnlockCamera()
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	bLockingOnCamera = false;
 	LockingOnCharacter = nullptr;
+	MotionWarpingComponent->RemoveWarpTarget(TEXT("AttackTarget"));
 }

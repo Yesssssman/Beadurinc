@@ -22,6 +22,10 @@ class BEADURINC_API UHitReactGameplayAbility : public UGameplayAbility
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimMontage> OnHurt;
 	
+	/** Attacker pause time when hit */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations", meta = (AllowPrivateAccess = "true"))
+	float HitStop;
+	
 	/** Whether the owner actor should look at attacker on hit */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Control", meta = (AllowPrivateAccess = "true"))
 	bool LookAttacker;

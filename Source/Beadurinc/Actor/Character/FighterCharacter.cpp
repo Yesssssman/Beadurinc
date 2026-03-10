@@ -4,6 +4,13 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/GameplayTag/GameplayEventTags.h"
 #include "Components/CapsuleComponent.h"
+#include "MotionWarpingComponent.h"
+
+AFighterCharacter::AFighterCharacter()
+{
+	// Create Motion Wraping component
+	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
+}
 
 void AFighterCharacter::BeginPlay()
 {
@@ -92,12 +99,30 @@ void AFighterCharacter::OnMeleeContacts
 	// Store the line tracing result to event context (this is used by creating Sound Cue and particles)
 	EventContext.ContextHandle.AddHitResult(PreciseHit);
 	
-	// Trigger the event
+	// Trigger GameplayEvent
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(OtherActor, GameplayEventTags::Event_Combat_Hit, EventContext);
+}
+
+void AFighterCharacter::AddHitActor(TObjectPtr<AActor> Opponent)
+{
+	HitActors.Add(Opponent);
 }
 
 void AFighterCharacter::ResetMeleeSwing()
 {
 	// Clear hit actors saved during melee track phase
 	HitActors.Empty();
+}
+
+void AFighterCharacter::HitStopForTime(const float StopTime)
+{
+	CustomTimeDilation = 0.0F;
+	FTimerHandle HitStopTimerHandle;
+	
+	GetWorldTimerManager().SetTimer(
+		HitStopTimerHandle,
+		FTimerDelegate::CreateLambda([this]{ CustomTimeDilation = 1.0F; }),
+		StopTime,
+		false
+	);
 }
