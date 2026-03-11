@@ -17,6 +17,9 @@
 #include "MotionWarpingComponent.h"
 #include "GameData/BeadurincPlayerState.h"
 
+#include "DrawDebugHelpers.h"
+#include "AbilitySystem/GameplayTag/StateGameplayTags.h"
+
 /** Constructor */
 APlayerCharacter::APlayerCharacter()
 {
@@ -412,24 +415,30 @@ void APlayerCharacter::UpdateCameraLock(float DeltaTime)
 	
 	SetActorRotation(NewActorRot);
 	
-	// Update the location of Motion Warping target
-	FMotionWarpingTarget MotionWarpingTarget;
-	MotionWarpingTarget.Location = LockingOnCharacter->GetActorLocation();
-	
-	UCapsuleComponent* OwnerCapsuleComponent = GetCapsuleComponent();
-	UCapsuleComponent* TargetCapsuleComponent = LockingOnCharacter->GetCapsuleComponent();
-	
-	// Push the target location toward myself, by the distance that equals to the radius of target's capsule component (if exists)
-	if (OwnerCapsuleComponent && TargetCapsuleComponent)
+	// Trace motion warping target location when not attacking.
+	// Otherwise the attack animation follows the target that has been pushed by current attack.
+	if (!AbilitySystemComponent->HasMatchingGameplayTag(StateGameplayTags::State_ComboLocked))
 	{
-		FVector FromTargetToMyself = GetActorLocation() - LockingOnCharacter->GetActorLocation();
-		FromTargetToMyself.Normalize(0.05F);
-		FromTargetToMyself *= OwnerCapsuleComponent->GetScaledCapsuleRadius() + TargetCapsuleComponent->GetScaledCapsuleRadius();
-		MotionWarpingTarget.Location += FromTargetToMyself;
+		// Update the location of Motion Warping target
+		FMotionWarpingTarget MotionWarpingTarget;
+		MotionWarpingTarget.Location = LockingOnCharacter->GetActorLocation();
+		
+		UCapsuleComponent* OwnerCapsuleComponent = GetCapsuleComponent();
+		UCapsuleComponent* TargetCapsuleComponent = LockingOnCharacter->GetCapsuleComponent();
+		
+		// Push the motion warping target location toward myself, by the distance that
+		// equals to the radius of target's capsule component (if exists)
+		if (OwnerCapsuleComponent && TargetCapsuleComponent)
+		{
+			FVector FromTargetToMyself = GetActorLocation() - LockingOnCharacter->GetActorLocation();
+			FromTargetToMyself.Normalize(0.05F);
+			FromTargetToMyself *= OwnerCapsuleComponent->GetScaledCapsuleRadius() + TargetCapsuleComponent->GetScaledCapsuleRadius();
+			MotionWarpingTarget.Location += FromTargetToMyself;
+		}
+		
+		MotionWarpingTarget.Name = TEXT("AttackTarget");
+		MotionWarpingComponent->AddOrUpdateWarpTarget(MotionWarpingTarget);
 	}
-	
-	MotionWarpingTarget.Name = TEXT("AttackTarget");
-	MotionWarpingComponent->AddOrUpdateWarpTarget(MotionWarpingTarget);
 }
 
 void APlayerCharacter::LockCamera(ACharacter* Target)
