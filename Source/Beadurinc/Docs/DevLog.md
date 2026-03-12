@@ -1,25 +1,5 @@
 개발로그
 
-# Actors
-
-## FighterCharacter
-
-- 전투와 연관된 행위를 하는 모든 Character를 추상화한 클래스
-- WeaponActor를 소유하고 있으며 AnimNotify를 통해 공격 타이밍에 충돌체를 활성화함
-- AbilitySystemComponent의 소유자이며 전투 관련 로직들은 GameplayAbilities에 구현되어 있음 (코드 간결성 유지)
-
-## WeaponActor
-
-- FighterCharacter가 장비할 수 있는 무기에 대한 Blueprint
-- StaticMesh와 충돌체, 그리고 공격력에 대한 정보를 가짐
-- Pawn이나 지형과의 충돌을 방지하기 위해 커스텀 ObjectChannel인 Weapon타입으로 설정됨
-
-## PlayerCharacter
-
-- 플레이어 컨트롤러에 의해 조작되는 캐릭터
-- EnhancedInput을 통해 Character갸 컨트롤됨
-- InputBuffering 시스템이 적용되어 BufferWindow동안 입력 가능 상태가 되면 자동으로 입력된 어빌리티를 발동시킴
-
 # Gameplay Abilities
 
 ## 캐릭터 속성값 (`AttributSet`)

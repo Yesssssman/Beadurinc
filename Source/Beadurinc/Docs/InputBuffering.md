@@ -9,9 +9,9 @@
 - 이러한 불합리함을 개선하기 위해서 Buffering을 취소하는 기능, 그리고 입력을 얼마나 오랫동안 기억할 것인지에 대한 임계치를
   다양한 상황에서의 테스트를 통해 설정할 필요가 있음
 
-아래 예시는 PlayerCharacter내에서 Input Buffering을 핸들링하는 기능이며 후술할 GameplayAbility와 연계되어 사용됨. 플레이어의
-입력이 Gameplay Ability의 활성화에 실패한다면 해당 입력을 `BUFFER_WINDOW_SECONDS` 만큼 기억하였다가, 플레이어 액터가 Scene내에서
-업데이트 될 때 버퍼링된 Input을 체크하여 해당 어빌리티를 즉시 발동시킴.
+아래 예시는 `PlayerCharacter`내에서 InputBuffering을 핸들링하는 기능이며 후술할 **GameplayAbility**와 연계되어 사용된다.
+플레이어의 입력이 GameplayAbility의 활성화에 실패한다면 해당 입력을 `BUFFER_WINDOW_SECONDS` 만큼 기억하였다가, 플레이어가 해당
+어빌리티를 다시 사용할 수 있는 상태가 되면 버퍼링된 Input을 즉시 발동시킨다.
 
 **PlayerCharacter.h**
 ```c++
@@ -87,6 +87,6 @@ void APlayerCharacter::PressAbility(int32 InputId)
 }
 ```
 
-아래의 Flow Chart는 플레이어의 콤보 공격 어빌리티가 작동하는 원리를 보여준다.
+아래의 Flow Chart는 플레이어의 콤보 공격 어빌리티가 InputBuffering에 영향을 받아 작동하는 원리를 보여준다.
 
 ![StateWindowNotifyState](img/ComboAttackFlowChart.png)

@@ -26,10 +26,6 @@ public:
 	// Sets default values for this actor's properties
 	AWeaponActor();
 	
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-	
 public:
 	// Returns a combo attack montage for given index
 	TObjectPtr<UAnimMontage> GetComboAttackAt(const unsigned int& Index) const;
