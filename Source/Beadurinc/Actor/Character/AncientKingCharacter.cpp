@@ -45,8 +45,5 @@ void AAncientKingCharacter::BeginPlay()
 			// Initialize stats from data table 
 			AbilitySystemComponent->InitStats(AttributeSetClass, InitialStatsTable);
 		}
-		
-		FGameplayAbilitySpec HitReactSpec(HitReactAbility, 1, static_cast<int32>(EAbilityId::Hit_React), this);
-		AbilitySystemComponent->GiveAbility(HitReactSpec);
 	}
 }

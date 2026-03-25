@@ -52,11 +52,12 @@ NotifyState의 Detail패널에서 설정할 수 있는 Max Speed Clamp Ratio값�
 *Clamp 적용시*
 
 ![HitReactDemo](img/Clamped.gif)
+___
+## 수정사항
 
-## +추가수정
-
-Motion Warping 테스트시에는 보스몹 캐릭터가 가만히 서있어서 알아채지 못했는데 처음 설정한 Target Location이 위치가 바뀌어도 유지
-됨. 따라서 Warping Target Location을 Update 함수에서 업데이트 하도록 변경함.
+Motion Warping 테스트시에는 보스몹 캐릭터가 가만히 서있어서 알아채지 못했는데 공격 애니메이션 재생 도중에 몬스터가 다른 위치로
+움직여도 워프 타겟 위치는 변하지 않기 때문에 모션 워핑이 소용없게 된다. 따라서 워프 타겟의 위치를 Update 함수에서 갱신하여 실시간으로
+추적하도록 변경하였다.
 
 **PlayerCharacter.cpp**
 ```c++

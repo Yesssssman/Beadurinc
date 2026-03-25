@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "FighterCharacter.h"
-#include "AbilitySystem/AttributeSet/LivingAttributeSet.h"
 #include "Logging/LogMacros.h"
 #include "PlayerCharacter.generated.h"
 
@@ -81,21 +80,18 @@ class APlayerCharacter : public AFighterCharacter
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* RollAction;
 
-protected:
+	/** Maximum Distance of Lockable Target */
+	UPROPERTY(EditAnywhere, Category="Camera")
+	double LockOnDistance;
 	
-	/** Called when a new controller takes control of this character */
-	virtual void PossessedBy(AController* NewController) override;
-	
-	/** On player state replicated in client side */
-	virtual void OnRep_PlayerState() override;
+	/** A character being locked on by the player */
+	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess))
+	TObjectPtr<ACharacter> LockingOnCharacter;
 	
 private:
 	
 	/** Used by input buffering system */
 	TOptional<FBufferedInput> BufferedInput;
-	
-	/** A character being locked on by the player */
-	TObjectPtr<ACharacter> LockingOnCharacter;
 	
 	/** Used by camera lock on system */
 	bool bLockingOnCamera;
@@ -115,7 +111,16 @@ protected:
 	
 	/** Initialize input action bindings */
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
+	
+	/** Called when a new controller takes control of this character. A sweet spot for handling player respawn in server. */
+	virtual void PossessedBy(AController* NewController) override;
+	
+	/** On player state replicated in a client side. Sweet spot for handling player respawn in client. */
+	virtual void OnRep_PlayerState() override;
+	
+	/** Returns whether current locking target is valid */
+	bool IsValidLockOnTarget(const ACharacter* Target) const;
+	
 protected:
 
 	/** Called for movement input */

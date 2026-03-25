@@ -2,7 +2,7 @@
 
 
 #include "BlockParryGameplayAbility.h"
-
+#include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
 #include "AbilitySystem/GameplayTag/StateGameplayTags.h"
@@ -49,15 +49,15 @@ void UBlockParryGameplayAbility::ActivateAbility
 	const FGameplayEventData* TriggerEventData
 )
 {
-	if (APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(ActorInfo->AvatarActor.Get()))
+	if (AFighterCharacter* Fighter = Cast<AFighterCharacter>(ActorInfo->AvatarActor.Get()))
 	{
 		// Add state tags
-		PlayerCharacter->GetAbilitySystemComponent()->AddLooseGameplayTag(StateGameplayTags::State_Blocking);
-		PlayerCharacter->GetAbilitySystemComponent()->AddLooseGameplayTag(StateGameplayTags::State_Parry);
+		Fighter->GetAbilitySystemComponent()->AddLooseGameplayTag(StateGameplayTags::State_Blocking);
+		Fighter->GetAbilitySystemComponent()->AddLooseGameplayTag(StateGameplayTags::State_Parry);
 		
 		// Play blocking anim montage
 		if (IsValid(BlockingMontage))
-			PlayerCharacter->PlayAnimMontage(BlockingMontage);
+			Fighter->PlayAnimMontage(BlockingMontage);
 		
 		// Allows parrying within time window 0.5 seconds
 		UAbilityTask_WaitDelay* AT_WaitDelay = UAbilityTask_WaitDelay::WaitDelay(
@@ -116,10 +116,14 @@ void UBlockParryGameplayAbility::EndAbility
 		
 		// Remove state tags
 		if (ASC->HasMatchingGameplayTag(StateGameplayTags::State_Blocking))
+		{
 			PlayerCharacter->GetAbilitySystemComponent()->RemoveLooseGameplayTag(StateGameplayTags::State_Blocking);
+		}
 		
 		if (ASC->HasMatchingGameplayTag(StateGameplayTags::State_Parry))
+		{
 			PlayerCharacter->GetAbilitySystemComponent()->RemoveLooseGameplayTag(StateGameplayTags::State_Parry);
+		}
 	}
 }
 

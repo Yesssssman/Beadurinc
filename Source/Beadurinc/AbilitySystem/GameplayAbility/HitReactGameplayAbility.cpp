@@ -29,6 +29,7 @@ void UHitReactGameplayAbility::ActivateAbility
 		Context.AddHitResult(*TriggerEventData->ContextHandle.GetHitResult());
 		CueParams.EffectContext = Context;
 		
+		//TODO: Remove random judge, check StateGameplayTag
 		FRandomStream RandomStream;
 		RandomStream.Initialize(FMath::Rand());
 		

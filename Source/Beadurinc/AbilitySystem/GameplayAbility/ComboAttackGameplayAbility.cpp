@@ -6,6 +6,7 @@
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Actor/Character/PlayerCharacter.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "AbilitySystemComponent.h"
 #include "AbilitySystem/AbilityId.h"
 #include "AbilitySystem/GameplayTag/StateGameplayTags.h"
 
@@ -23,6 +24,11 @@ void UComboAttackGameplayAbility::PlayNextComboAttack()
 	// Checks weapon in hand
 	if (BCharacter && BCharacter->IsHoldingWeapon())
 	{
+		FRotator ActorRotation = BCharacter->GetActorRotation();
+		FRotator ControlRotation = BCharacter->GetController()->GetControlRotation();
+		
+		BCharacter->SetActorRotation(FRotator(ActorRotation.Pitch, ControlRotation.Yaw, ActorRotation.Roll));
+		
 		// Add combo lock state
 		BCharacter->GetAbilitySystemComponent()->AddLooseGameplayTag(StateGameplayTags::State_ComboLocked);
 		

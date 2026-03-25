@@ -13,12 +13,11 @@
 #include "AbilitySystemComponent.h"
 #include "AncientKingCharacter.h"
 #include "AbilitySystem/AbilityId.h"
-#include "EngineUtils.h"
 #include "MotionWarpingComponent.h"
 #include "GameData/BeadurincPlayerState.h"
 
-#include "DrawDebugHelpers.h"
 #include "AbilitySystem/GameplayTag/StateGameplayTags.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 /** Constructor */
 APlayerCharacter::APlayerCharacter()
@@ -54,7 +53,8 @@ APlayerCharacter::APlayerCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
-
+	LockOnDistance = 2000.0;
+	
 	bLockingOnCamera = false;
 }
 
@@ -93,6 +93,26 @@ void APlayerCharacter::OnRep_PlayerState()
 	}
 }
 
+/** Returns whether current locking target is valid */
+bool APlayerCharacter::IsValidLockOnTarget(const ACharacter* Target) const
+{
+	// Invalid (object destroyed or pending kill)
+	if (!IsValid(Target))
+	{
+		return false;
+	}
+	
+	double DistanceSqr = (GetActorLocation() - Target->GetActorLocation()).SquaredLength();
+	
+	// Distance too far
+	if (DistanceSqr > LockOnDistance * LockOnDistance)
+	{
+		return false;
+	}
+	
+	return true;
+}
+
 void APlayerCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
@@ -103,7 +123,7 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 		// Since check for object pointer is conducted in each tick we can ignore
 		// the error message, "Object member 'LockingOnCharacter' can be destroyed
 		// during garbage collection, resulting in a stale pointer"
-		if (!IsValid(LockingOnCharacter))
+		if (!IsValidLockOnTarget(LockingOnCharacter))
 		{
 			UnlockCamera();
 		}
@@ -214,15 +234,34 @@ void APlayerCharacter::ToggleCamLock(const FInputActionValue& Value)
 		PC->GetViewportSize(ViewX, ViewY);
 		
 		ACharacter* ClosestActorFromCrosshair = nullptr;
-		double ClosestDistance = 1000000000.0;
+		double ClosestDistanceOnScreenSqr = 1000000000.0;
+		
+		// Define the types to look for
+		TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+		ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_Pawn));
+		
+		TArray<AActor*> IgnoreActors;
+		IgnoreActors.Add(this);
+		TArray<AActor*> ActorsWithinBound;
+		
+		// Only gets actors within preset distance
+		UKismetSystemLibrary::SphereOverlapActors(
+			GetWorld(), 
+			GetActorLocation(), 
+			LockOnDistance,
+			ObjectTypes, 
+			ACharacter::StaticClass(), 
+			IgnoreActors, 
+			ActorsWithinBound
+		);
 		
 		// Iterates all actors
-		for (TActorIterator<ACharacter> It(GetWorld()); It; ++It)
+		for (AActor* Actor : ActorsWithinBound)
 		{
-			ACharacter* Character = *It;
+			ACharacter* Character = Cast<ACharacter>(Actor);
 			
 			// Skip the character that is invalid or if it's myself
-			if (!IsValid(Character) || Character == this)
+			if (!IsValidLockOnTarget(Character) || Character == this)
 			{
 				continue;
 			}
@@ -246,13 +285,13 @@ void APlayerCharacter::ToggleCamLock(const FInputActionValue& Value)
 			ActorLocationInScreen.Y -= ViewY / 2;
 			
 			// Calculates distance
-			const double DistanceFromCrosshair = ActorLocationInScreen.SquaredLength();
+			const double DistanceFromCrosshairSqr = ActorLocationInScreen.SquaredLength();
 			
 			// Calculate the distance between center of the screen and an actor, if true, memorize the actor and distance
-			if (DistanceFromCrosshair < ClosestDistance)
+			if (DistanceFromCrosshairSqr < ClosestDistanceOnScreenSqr)
 			{
 				ClosestActorFromCrosshair = Character;
-				ClosestDistance = DistanceFromCrosshair;
+				ClosestDistanceOnScreenSqr = DistanceFromCrosshairSqr;
 			}
 		}
 		
@@ -387,15 +426,16 @@ void APlayerCharacter::UpdateCameraLock(float DeltaTime)
 	APlayerController* PC = Cast<APlayerController>(GetController());
 	if (!PC) return;
 	
-	// Set camera rotation
-	FVector CameraLoc = PC->PlayerCameraManager->GetCameraLocation();
+	// Get the camera rotation
+	FVector LockOnStart = GetActorLocation();
+	LockOnStart.Y += GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 2;//PC->PlayerCameraManager->GetCameraLocation().Y;
 	
 	// Add the half height of the target's collider to aim at the center of the target
 	FVector TargetLoc =	LockingOnCharacter->GetActorLocation();
-	TargetLoc.Y += LockingOnCharacter->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 0.3;
+	// TargetLoc.Y += LockingOnCharacter->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 0.1;
 
 	// Calculate rotator from vector camera -> target
-	FRotator DesiredRot = (TargetLoc - CameraLoc).Rotation();
+	FRotator DesiredRot = (TargetLoc - LockOnStart).Rotation();
 	FRotator CurrentRot = PC->GetControlRotation();
 	
 	// Get interpolated rotator by current rotation -> desired rotation
@@ -412,7 +452,6 @@ void APlayerCharacter::UpdateCameraLock(float DeltaTime)
 	
 	// Do not rotate pitch
 	NewActorRot.Pitch = CurrentActorRot.Pitch;
-	
 	SetActorRotation(NewActorRot);
 	
 	// Trace motion warping target location when not attacking.

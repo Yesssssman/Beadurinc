@@ -5,6 +5,7 @@
 #include "AbilitySystem/GameplayTag/GameplayEventTags.h"
 #include "Components/CapsuleComponent.h"
 #include "MotionWarpingComponent.h"
+#include "AbilitySystem/AbilityId.h"
 
 AFighterCharacter::AFighterCharacter()
 {
@@ -46,6 +47,13 @@ void AFighterCharacter::BeginPlay()
 				TEXT("Weapon_Socket")
 			);
 		}
+	}
+	
+	// Initialize only in authorized side to let them replicated to clients by networking
+	if (AbilitySystemComponent && HasAuthority())
+	{
+		FGameplayAbilitySpec HitReactSpec(HitReactAbility, 1, static_cast<int32>(EAbilityId::Hit_React), this);
+		AbilitySystemComponent->GiveAbility(HitReactSpec);
 	}
 }
 
