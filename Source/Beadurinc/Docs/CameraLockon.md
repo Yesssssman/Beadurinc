@@ -193,5 +193,59 @@ ___
 
 ## 수정사항
 
-근접 전투 도중에 몬스터 위치가 너무 가까우면 화면이 너무 격렬하게 움직이는 문제가 발생하였다.
+근접 전투 테스트 도중에 몬스터가 화면 정중앙에 놓일 수 없는 위치에 있으면 카메라가 지속적으로 회전하는 문제가 발생하였다.
 
+![InfiniteRotationIssue](img/InfiniteRotationIssue.gif)
+
+이는 수학적인 오류로 카메라의 *현재* 위치를 기준으로 타겟을 바라보는 각도를 계산하기 때문인데 카메라의 현재 위치는 이전 계산 결과값
+에 의해 변하므로 무한 루프가 발생하는 것이다. 따라서 이를 해결하기 위해 락온 각도 계산을 위한 고정된 시작 위치를 구할 필요가 있었다.
+
+첫 번째 시도에서는 액터의 위치를 기준으로 각도를 계산하였으나 이는 스크린 상의 몬스터가 너무 왼쪽으로 치우처진 문제가 있었다. 이는
+TPS 게임 특성상 카메라가 플레이어보다 오른쪽에 위치해 있기 때문이다.
+
+![ActorBasedLockonIssue](img/ActorBasedLockonIssue.png)
+
+두 번째로 떠올린 방법은 카메라의 초기 로컬 위치(플레이어 좌표계 기준)을 따로 저장하여 락온 각도 계산에 사용하는 것이었다. 이는 첫
+번째 방법보다 상대적으로 가운데 위치에 락온 타겟을 배치할 수 있으며 초기 위치는 락온 각도 계산 결과값에 영향을 받지 않으므로 무한 회전
+문제에서도 자유롭다.
+
+**PlayerCharacter.h**
+```c++
+class APlayerCharacter : public AFighterCharacter
+{
+...
+    /** Initial camera location from player coord system. Used in calculating camera lock angle */
+    FVector InitLocalCameraLocation;
+...
+```
+
+**PlayerCharacter.cpp**
+```c++
+void APlayerCharacter::BeginPlay()
+{
+    Super::BeginPlay();
+    
+    FVector CameraLocal = GetActorRotation().UnrotateVector(FollowCamera->GetComponentLocation() - GetActorLocation());
+    
+    // Save the initial camera local location
+    InitLocalCameraLocation = CameraLocal;
+}
+
+void APlayerCharacter::UpdateCameraLock(float DeltaTime)
+{
+    ...
+    // Calculate world location of camera initial point
+    FVector WorldLocalCamera = GetActorRotation().RotateVector(InitLocalCameraLocation);
+    
+    // Get the camera rotation
+    FVector LockOnStart = GetActorLocation() + WorldLocalCamera;
+    ...
+}
+```
+
+`BeginPlay` 함수에서 카메라 로컬 위치 계산시 액터의 회전값을 `UnrotateVector` 함수를 통해 플레이어 좌표계 기준 위치를 계산하였다.
+락온 각도 업데이트시에는 다시 액터의 회전값을 벡터에 적용하여 카메라 초기 위치의 월드 좌표를 구하였다.
+
+*결과*
+
+![CameraSolved](img/CameraSolved.gif)

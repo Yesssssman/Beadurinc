@@ -93,6 +93,9 @@ private:
 	/** Used by input buffering system */
 	TOptional<FBufferedInput> BufferedInput;
 	
+	/** Initial camera location from player coord system. Used in calculating camera lock angle */
+	FVector InitLocalCameraLocation;
+	
 	/** Used by camera lock on system */
 	bool bLockingOnCamera;
 	
@@ -106,6 +109,9 @@ public:
 
 protected:
 
+	/** Called on join a level */
+	virtual void BeginPlay() override;
+	
 	/** On every tick in a world */
 	virtual void Tick(float DeltaSeconds) override;
 	
@@ -140,6 +146,9 @@ protected:
 
 	/** On released GAS ability input key */
 	void ReleaseAbility(int32 InputId);
+
+	/** Get a current attack target (Locked-on target by camera) */
+	FORCEINLINE virtual TObjectPtr<ACharacter> GetAttackTarget() override { return LockingOnCharacter; }
 
 public:
 	

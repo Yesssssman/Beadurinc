@@ -9,7 +9,7 @@
 #include "GameFramework/Controller.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "InputActionValue.h"
+#include "InputActionValue.h"	
 #include "AbilitySystemComponent.h"
 #include "AncientKingCharacter.h"
 #include "AbilitySystem/AbilityId.h"
@@ -46,7 +46,7 @@ APlayerCharacter::APlayerCharacter()
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 400.0f;
+	CameraBoom->TargetArmLength = 240.0F;
 	CameraBoom->bUsePawnControlRotation = true;
 
 	// Create a follow camera
@@ -56,6 +56,17 @@ APlayerCharacter::APlayerCharacter()
 	LockOnDistance = 2000.0;
 	
 	bLockingOnCamera = false;
+}
+
+void APlayerCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	// Remove actor rotation, to get a local space location.
+	FVector CameraLocal = GetActorRotation().UnrotateVector(FollowCamera->GetComponentLocation() - GetActorLocation());
+	
+	// Save the initial camera local location
+	InitLocalCameraLocation = CameraLocal;
 }
 
 // Handle server side respawn
@@ -426,13 +437,14 @@ void APlayerCharacter::UpdateCameraLock(float DeltaTime)
 	APlayerController* PC = Cast<APlayerController>(GetController());
 	if (!PC) return;
 	
+	// Calculate world location of camera initial point
+	FVector WorldLocalCamera = GetActorRotation().RotateVector(InitLocalCameraLocation);
+	
 	// Get the camera rotation
-	FVector LockOnStart = GetActorLocation();
-	LockOnStart.Y += GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 2;//PC->PlayerCameraManager->GetCameraLocation().Y;
+	FVector LockOnStart = GetActorLocation() + WorldLocalCamera;
 	
 	// Add the half height of the target's collider to aim at the center of the target
 	FVector TargetLoc =	LockingOnCharacter->GetActorLocation();
-	// TargetLoc.Y += LockingOnCharacter->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 0.1;
 
 	// Calculate rotator from vector camera -> target
 	FRotator DesiredRot = (TargetLoc - LockOnStart).Rotation();
@@ -444,13 +456,15 @@ void APlayerCharacter::UpdateCameraLock(float DeltaTime)
 	// Set to the calculated rotation
 	PC->SetControlRotation(NewRot);
 	
-	// Set camera rotation with the same principle
+	// Sets actor rotation
+	// Decoupled with camera rotation since actor eye position is different from camera position
+	// Calculate in the same way, using (target - eye).Rotation()
 	FVector ActorLoc = GetActorLocation();
 	FRotator DesiredActorRot = (TargetLoc - ActorLoc).Rotation();
 	FRotator CurrentActorRot = GetActorRotation();
 	FRotator NewActorRot = FMath::RInterpTo(CurrentActorRot, DesiredActorRot, DeltaTime, 10.f);
 	
-	// Do not rotate pitch
+	// Won't rotate in pitch
 	NewActorRot.Pitch = CurrentActorRot.Pitch;
 	SetActorRotation(NewActorRot);
 	

@@ -20,7 +20,7 @@ class BEADURINC_API ABeadurincHUD : public AHUD
 	/**
 	 * A target indicator when player activates Camera Lock-on feature
 	 */
-	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
 	UUserWidget* LockOnIndicator;
 
 	/**
@@ -35,7 +35,7 @@ class BEADURINC_API ABeadurincHUD : public AHUD
 	/**
 	 * Main player character
 	 */
-	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	TObjectPtr<APlayerCharacter> PlayerCharacter;
 	
 public:

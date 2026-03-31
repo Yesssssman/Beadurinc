@@ -12,12 +12,12 @@ AFighterCharacter::AFighterCharacter()
 }
 ```
 
-애니메이션 몽타주를 이용해 타격하는 모든 Fighter에게 Motion Warping을 적용할 것이므로 AFighterCharacter의 Constructor에서 해당
+애니메이션 몽타주를 이용해 타격하는 모든 Fighter에게 Motion Warping을 적용할 것이므로 `AFighterCharacter`의 Constructor에서 해당
 기능을 담당하는 컴포넌트를 생성해 주었다.
 
 ## MotionWarping 타겟 설정하기
 
-AddOrUpdateWarpTarget 함수를 통해 MotionWarping을 적용할 타겟에 대한 정보를 설정하였다. 여기서 `AttackTarget`은 현재 활성화된
+AddOrUpdateWarpTarget 함수를 통해 Motion Warping을 적용할 타겟에 대한 정보를 설정하였다. 여기서 `AttackTarget`은 현재 활성화된
 MotionWarpingTarget을 식별하기 위한 문자열로 NotifyState에서도 설정해 줘야 MotionWarping을 적용할 수 있다.
 
 **PlayerCharacter.cpp**
@@ -53,23 +53,63 @@ NotifyState의 Detail패널에서 설정할 수 있는 Max Speed Clamp Ratio값�
 
 ![HitReactDemo](img/Clamped.gif)
 ___
-## 수정사항
+## 추상화를 사용하여 플레이어와 몬스터 모두에게 공통적으로 Motion Warping 적용하기
 
-Motion Warping 테스트시에는 보스몹 캐릭터가 가만히 서있어서 알아채지 못했는데 공격 애니메이션 재생 도중에 몬스터가 다른 위치로
-움직여도 워프 타겟 위치는 변하지 않기 때문에 모션 워핑이 소용없게 된다. 따라서 워프 타겟의 위치를 Update 함수에서 갱신하여 실시간으로
-추적하도록 변경하였다.
+Motion Warping은 플레이어의 공격 뿐만 아니라 몬스터의 공격 애니메이션에도 적용되어야 한다. 플레이어의 Warping Target은 카메라
+락온이 활성화 될때 설정되지만 몬스터는 `AIController`에 의해 플레이어를 감지할 때 생성되어야 한다. 이를 위해서 현재 공격 타겟을
+반환하는 함수를 `AFighterCharacter` 에 순수 가상 함수로 만들어주었다.
 
-**PlayerCharacter.cpp**
+**AFighterCharacter**
 ```c++
-/** Called on updating camera transform to look at the target */
-void APlayerCharacter::UpdateCameraLock(float DeltaTime)
+class BEADURINC_API AFighterCharacter : public ACharacter, public IAbilitySystemInterface, public IWeaponHolderInterface
 {
     ...
     
-    // Update the location of Motion Warping target
-    FMotionWarpingTarget MotionWarpingTarget;
-    MotionWarpingTarget.Location = LockingOnCharacter->GetActorLocation();
-    MotionWarpingTarget.Name = TEXT("AttackTarget");
-    MotionWarpingComponent->AddOrUpdateWarpTarget(MotionWarpingTarget);
+    /** Returns a current attacking target. Determined by camera lock for players, by AI perception for monsters. */
+    virtual TObjectPtr<ACharacter> GetAttackTarget() PURE_VIRTUAL(AFighterCharacter::GetAttackTarget, return nullptr; );
+    ...
 }
 ```
+
+그 다음 실제로 `MotionWarpingComponent`에 Warping Location을 설정하는 `AnimNotifyState`클래스를 정의하였다.
+
+```c++
+void UANS_SetWarpingLocation::NotifyTick
+(
+    USkeletalMeshComponent* MeshComp,
+    UAnimSequenceBase* Animation,
+    float FrameDeltaTime,
+    const FAnimNotifyEventReference& EventReference
+)
+{
+    if (AFighterCharacter* Owner = Cast<AFighterCharacter>(MeshComp->GetOwner()))
+    {
+        // Checks the validity of an attack target
+        if (IsValid(Owner->GetAttackTarget()))
+        {
+            // Update the location of Motion Warping target
+            FMotionWarpingTarget MotionWarpingTarget;
+            MotionWarpingTarget.Location = Owner->GetAttackTarget()->GetActorLocation();
+            
+            UCapsuleComponent* OwnerCapsuleComponent = Owner->GetCapsuleComponent();
+            UCapsuleComponent* TargetCapsuleComponent = Owner->GetAttackTarget()->GetCapsuleComponent();
+            
+            // Push the motion warping target location toward myself, by the distance that
+            // equals to the radius of target's capsule component (if exists)
+            if (OwnerCapsuleComponent && TargetCapsuleComponent)
+            {
+                FVector FromTargetToMyself = Owner->GetActorLocation() - Owner->GetAttackTarget()->GetActorLocation();
+                FromTargetToMyself.Normalize(0.05F);
+                FromTargetToMyself *= OwnerCapsuleComponent->GetScaledCapsuleRadius() + TargetCapsuleComponent->GetScaledCapsuleRadius();
+                MotionWarpingTarget.Location += FromTargetToMyself;
+            }
+            
+            MotionWarpingTarget.Name = TEXT("AttackTarget");
+            Owner->GetMotionWarpingComponent()->AddOrUpdateWarpTarget(MotionWarpingTarget);
+        }
+    }
+}
+```
+
+이렇게 함으로써 `AFighterCharacter`를 상속받는 모든 캐릭터들은 `GetAttackTarget()` 함수를 통해 현재 공격 중인 캐릭터를 반환하기만
+하면 Warping Target을 설정하는 프로세스는 `AnimNotifyState`에서 전담한다.

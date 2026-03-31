@@ -26,6 +26,9 @@ public:
 	
 	virtual void BeginPlay() override;
 	
+	/** Returns currently targeting actor by AI Controller */
+	virtual TObjectPtr<ACharacter> GetAttackTarget() override;
+	
 	// Sets default values for this character's properties
 	AAncientKingCharacter();
 };

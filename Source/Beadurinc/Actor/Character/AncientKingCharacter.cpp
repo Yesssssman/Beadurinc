@@ -2,7 +2,8 @@
 
 #include "AncientKingCharacter.h"
 #include "AbilitySystemComponent.h"
-#include "AbilitySystem/AbilityId.h"
+#include "AIController.h"
+#include "BehaviorTree/BlackboardComponent.h"
 
 // Sets default values
 AAncientKingCharacter::AAncientKingCharacter()
@@ -46,4 +47,20 @@ void AAncientKingCharacter::BeginPlay()
 			AbilitySystemComponent->InitStats(AttributeSetClass, InitialStatsTable);
 		}
 	}
+}
+
+TObjectPtr<ACharacter> AAncientKingCharacter::GetAttackTarget()
+{
+	if (const AAIController* AIController = Cast<AAIController>(GetController()))
+	{
+		if (const UBlackboardComponent* Blackboard = AIController->GetBlackboardComponent())
+		{
+			if (ACharacter* TargetCharacter = Cast<ACharacter>(Blackboard->GetValueAsObject(TEXT("TargetActor"))))
+			{
+				return TargetCharacter;
+			}
+		}
+	}
+	
+	return nullptr;
 }

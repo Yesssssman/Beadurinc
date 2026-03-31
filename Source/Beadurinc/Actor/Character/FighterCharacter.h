@@ -83,6 +83,9 @@ public:
 	/** Apply Hit Stop on melee strike */
 	void HitStopForTime(const float StopTime);
 	
+	/** Returns a current attacking target. Determined by camera lock for players, by AI perception for monsters. */
+	virtual TObjectPtr<ACharacter> GetAttackTarget() PURE_VIRTUAL(AFighterCharacter::GetAttackTarget, return nullptr; );
+	
 	/** Returns whether the character is holding weapon in main hand **/
 	FORCEINLINE virtual bool IsHoldingWeapon() const override { return IsValid(WeaponActorInstance); }
 
@@ -91,4 +94,7 @@ public:
 	
 	/** Returns Ability Component object **/
 	FORCEINLINE virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override { return AbilitySystemComponent; };
+	
+	/** Returns Motion Warping manager */
+	FORCEINLINE virtual UMotionWarpingComponent* GetMotionWarpingComponent() const { return MotionWarpingComponent; };
 };
