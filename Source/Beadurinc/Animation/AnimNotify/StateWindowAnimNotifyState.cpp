@@ -5,13 +5,7 @@
 
 #include "Actor/Character/PlayerCharacter.h"
 
-void UStateWindowAnimNotifyState::NotifyBegin
-(
-	USkeletalMeshComponent* MeshComp,
-	UAnimSequenceBase* Animation,
-	float TotalDuration,
-	const FAnimNotifyEventReference& EventReference
-)
+void UStateWindowAnimNotifyState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
 	if (const APlayerCharacter* BCharacter = Cast<APlayerCharacter>(MeshComp->GetOwner()))
 	{
@@ -22,12 +16,7 @@ void UStateWindowAnimNotifyState::NotifyBegin
 	}
 }
 
-void UStateWindowAnimNotifyState::NotifyEnd
-(
-	USkeletalMeshComponent* MeshComp,
-	UAnimSequenceBase* Animation,
-	const FAnimNotifyEventReference& EventReference
-)
+void UStateWindowAnimNotifyState::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
 	if (const APlayerCharacter* BCharacter = Cast<APlayerCharacter>(MeshComp->GetOwner()))
 	{

@@ -15,24 +15,14 @@ UCLASS()
 class BEADURINC_API UStateWindowAnimNotifyState : public UAnimNotifyState
 {
 	GENERATED_BODY()
-	
+
+private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "StateTag", meta = (AllowPrivateAccess = true))
 	FGameplayTag StateTag;
 	
 protected:
 	
-	virtual void NotifyBegin
-	(
-		USkeletalMeshComponent* MeshComp,
-		UAnimSequenceBase* Animation,
-		float TotalDuration,
-		const FAnimNotifyEventReference& EventReference
-	) override;
-	
-	virtual void NotifyEnd
-	(
-		USkeletalMeshComponent* MeshComp,
-		UAnimSequenceBase* Animation,
-		const FAnimNotifyEventReference& EventReference
-	) override;
+	virtual void NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference) override;
+
+	virtual void NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 };

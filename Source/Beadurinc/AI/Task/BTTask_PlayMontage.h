@@ -14,7 +14,8 @@ UCLASS()
 class BEADURINC_API UBTTask_PlayMontage : public UBTTaskNode
 {
 	GENERATED_BODY()
-	
+
+private:
 	/** Animation Montage to play. Must compatible with the skeleton that BT owner has */
 	UPROPERTY(Category = Node, EditAnywhere)
 	FValueOrBBKey_Object MontageToPlay = TObjectPtr<UAnimMontage>();

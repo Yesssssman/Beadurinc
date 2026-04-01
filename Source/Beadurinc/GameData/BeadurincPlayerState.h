@@ -29,7 +29,8 @@ UCLASS()
 class BEADURINC_API ABeadurincPlayerState : public APlayerState, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
-	
+
+private:
 	/// Keeping ASC in PlayerState will persist the player data (cooldown, score) after death
 	/// and respawn, allowing a player respawns with previous data. 
 	UPROPERTY()

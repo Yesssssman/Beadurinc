@@ -5,13 +5,7 @@
 #include "AbilitySystemComponent.h"
 #include "Actor/Character/FighterCharacter.h"
 
-void UHitReactGameplayAbility::ActivateAbility
-(
-	const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayAbilityActivationInfo ActivationInfo,
-	const FGameplayEventData* TriggerEventData
-)
+void UHitReactGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	AFighterCharacter* OwnerCharacter = Cast<AFighterCharacter>(ActorInfo->AvatarActor.Get());
 	UAbilitySystemComponent* OwnerACS = ActorInfo->AbilitySystemComponent.Get();

@@ -2,6 +2,7 @@
 
 #include "RollGameplayAbility.h"
 #include "Actor/Character/PlayerCharacter.h"
+#include "AbilitySystemComponent.h"
 #include "AbilitySystem/GameplayTag/StateGameplayTags.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 
@@ -13,14 +14,7 @@ URollGameplayAbility::URollGameplayAbility()
 /**
  * Checks if the player can do combo attacks
  */
-bool URollGameplayAbility::CanActivateAbility
-(
-	const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayTagContainer* SourceTags,
-	const FGameplayTagContainer* TargetTags,
-	OUT FGameplayTagContainer* OptionalRelevantTags
-) const
+bool URollGameplayAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, OUT FGameplayTagContainer* OptionalRelevantTags) const
 {
 	if (!IsValid(RollingMontage))
 	{
@@ -38,13 +32,7 @@ bool URollGameplayAbility::CanActivateAbility
 /**
  * Takes blocking stance
  */
-void URollGameplayAbility::ActivateAbility
-(
-	const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayAbilityActivationInfo ActivationInfo,
-	const FGameplayEventData* TriggerEventData
-)
+void URollGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	if (APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(ActorInfo->AvatarActor.Get()))
 	{

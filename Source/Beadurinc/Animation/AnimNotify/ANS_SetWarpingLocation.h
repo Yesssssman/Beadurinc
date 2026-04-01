@@ -14,11 +14,5 @@ class BEADURINC_API UANS_SetWarpingLocation : public UAnimNotifyState
 	GENERATED_BODY()
 	
 protected:
-	virtual void NotifyTick
-	(
-		USkeletalMeshComponent* MeshComp,
-		UAnimSequenceBase* Animation,
-		float FrameDeltaTime,
-		const FAnimNotifyEventReference& EventReference
-	) override;
+	virtual void NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime, const FAnimNotifyEventReference& EventReference) override;
 };

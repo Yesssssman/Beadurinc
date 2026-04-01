@@ -16,10 +16,5 @@ class BEADURINC_API UFireBufferedInputAnimNotify : public UAnimNotify
 	
 public:
 	
-	virtual void Notify
-	(
-		USkeletalMeshComponent* MeshComp,
-		UAnimSequenceBase* Animation,
-		const FAnimNotifyEventReference& EventReference
-	) override;
+	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 };

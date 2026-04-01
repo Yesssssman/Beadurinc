@@ -3,13 +3,7 @@
 #include "Actor/WeaponActor.h"
 #include "Actor/Character/FighterCharacter.h"
 
-void UMeleeTraceAnimationNotify::NotifyBegin
-(
-	USkeletalMeshComponent* MeshComp,
-	UAnimSequenceBase* Animation,
-	float TotalDuration,
-	const FAnimNotifyEventReference& EventReference
-)
+void UMeleeTraceAnimationNotify::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
 	// Check if the owner is a weapon holdable character
 	if (AFighterCharacter* FighterCharacter = Cast<AFighterCharacter>(MeshComp->GetOwner()))
@@ -20,12 +14,7 @@ void UMeleeTraceAnimationNotify::NotifyBegin
 	}
 }
 
-void UMeleeTraceAnimationNotify::NotifyEnd
-(
-	USkeletalMeshComponent* MeshComp,
-	UAnimSequenceBase* Animation,
-	const FAnimNotifyEventReference& EventReference
-)
+void UMeleeTraceAnimationNotify::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
 	// Check if the owner is a weapon holdable character
 	if (AFighterCharacter* FighterCharacter = Cast<AFighterCharacter>(MeshComp->GetOwner()))

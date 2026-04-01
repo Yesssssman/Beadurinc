@@ -8,13 +8,7 @@
 #include "Components/CapsuleComponent.h"
 #include "MotionWarpingComponent.h"
 
-void UANS_SetWarpingLocation::NotifyTick
-(
-	USkeletalMeshComponent* MeshComp,
-	UAnimSequenceBase* Animation,
-	float FrameDeltaTime,
-	const FAnimNotifyEventReference& EventReference
-)
+void UANS_SetWarpingLocation::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime, const FAnimNotifyEventReference& EventReference)
 {
 	if (AFighterCharacter* Owner = Cast<AFighterCharacter>(MeshComp->GetOwner()))
 	{

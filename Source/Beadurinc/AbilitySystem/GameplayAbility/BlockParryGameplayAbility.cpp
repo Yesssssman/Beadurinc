@@ -16,14 +16,7 @@ UBlockParryGameplayAbility::UBlockParryGameplayAbility()
 /**
  * Checks if the player can do combo attacks
  */
-bool UBlockParryGameplayAbility::CanActivateAbility
-(
-	const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayTagContainer* SourceTags,
-	const FGameplayTagContainer* TargetTags,
-	OUT FGameplayTagContainer* OptionalRelevantTags
-) const
+bool UBlockParryGameplayAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, OUT FGameplayTagContainer* OptionalRelevantTags) const
 {
 	if (!IsValid(BlockingMontage))
 	{
@@ -41,13 +34,7 @@ bool UBlockParryGameplayAbility::CanActivateAbility
 /**
  * Takes blocking stance
  */
-void UBlockParryGameplayAbility::ActivateAbility
-(
-	const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayAbilityActivationInfo ActivationInfo,
-	const FGameplayEventData* TriggerEventData
-)
+void UBlockParryGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	if (AFighterCharacter* Fighter = Cast<AFighterCharacter>(ActorInfo->AvatarActor.Get()))
 	{
@@ -81,14 +68,8 @@ void UBlockParryGameplayAbility::ActivateAbility
 
 /**
  * Called on the ability being canceled
-  */
-void UBlockParryGameplayAbility::CancelAbility
-(
-	const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayAbilityActivationInfo ActivationInfo,
-	bool bReplicateCancelAbility
-)
+ */
+void UBlockParryGameplayAbility::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
 {
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 }
@@ -96,14 +77,7 @@ void UBlockParryGameplayAbility::CancelAbility
 /**
  * Called on the ability finished both by force and normal finish
  */
-void UBlockParryGameplayAbility::EndAbility
-(
-	const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayAbilityActivationInfo ActivationInfo,
-	bool bReplicateEndAbility,
-	bool bWasCancelled
-)
+void UBlockParryGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 	
@@ -136,7 +110,9 @@ void UBlockParryGameplayAbility::OnParryWindowFinished()
 		if (!ASC) return;
 		
 		if (ASC->HasMatchingGameplayTag(StateGameplayTags::State_Parry))
+		{
 			PlayerCharacter->GetAbilitySystemComponent()->RemoveLooseGameplayTag(StateGameplayTags::State_Parry);
+		}
 	}
 }
 

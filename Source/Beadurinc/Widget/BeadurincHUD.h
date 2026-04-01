@@ -17,6 +17,7 @@ class BEADURINC_API ABeadurincHUD : public AHUD
 {
 	GENERATED_BODY()
 
+private:
 	/**
 	 * A target indicator when player activates Camera Lock-on feature
 	 */

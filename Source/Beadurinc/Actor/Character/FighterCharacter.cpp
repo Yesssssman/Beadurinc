@@ -57,15 +57,7 @@ void AFighterCharacter::BeginPlay()
 	}
 }
 
-void AFighterCharacter::OnMeleeContacts
-(
-	UPrimitiveComponent* OverlappedComponent,
-	AActor* OtherActor,
-	UPrimitiveComponent* OtherComp,
-	int32 OtherBodyIndex,
-	bool bFromSweep,
-	const FHitResult& SweepResult
-)
+void AFighterCharacter::OnMeleeContacts(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	AFighterCharacter* OtherFighter = Cast<AFighterCharacter>(OtherActor);
 	

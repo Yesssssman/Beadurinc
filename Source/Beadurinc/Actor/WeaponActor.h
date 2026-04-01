@@ -13,7 +13,8 @@ UCLASS()
 class BEADURINC_API AWeaponActor : public AActor
 {
 	GENERATED_BODY()
-	
+
+private:
 	/** Combo attack sequence for owner */
 	UPROPERTY(EditAnywhere, Category="Animation", meta=(AllowPrivateAccess=true))
 	TArray<TObjectPtr<UAnimMontage>> WeaponComboAttacks;

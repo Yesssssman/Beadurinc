@@ -14,6 +14,7 @@ class BEADURINC_API UBTDecorator_DistanceWithin : public UBTDecorator
 {
 	GENERATED_BODY()
 
+private:
 	/** The Blackboard key for target actor */
 	UPROPERTY(EditAnywhere, Category = "Condition", meta = (AllowPrivateAccess = true))
 	FBlackboardKeySelector TargetActorKey;

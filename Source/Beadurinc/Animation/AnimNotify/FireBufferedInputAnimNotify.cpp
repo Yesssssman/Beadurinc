@@ -5,12 +5,7 @@
 
 #include "Actor/Character/PlayerCharacter.h"
 
-void UFireBufferedInputAnimNotify::Notify
-(
-	USkeletalMeshComponent* MeshComp,
-	UAnimSequenceBase* Animation,
-	const FAnimNotifyEventReference& EventReference
-)
+void UFireBufferedInputAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
 	if (!MeshComp) return;
 	

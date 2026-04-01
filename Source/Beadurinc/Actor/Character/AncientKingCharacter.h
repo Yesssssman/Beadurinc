@@ -13,7 +13,8 @@ UCLASS()
 class BEADURINC_API AAncientKingCharacter : public AFighterCharacter
 {
 	GENERATED_BODY()
-	
+
+private:
 	/** Attribute Set Class */
 	UPROPERTY(EditDefaultsOnly, Category="Gameplay Abilities")
 	TSubclassOf<UAttributeSet> AttributeSetClass;

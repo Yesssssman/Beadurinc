@@ -13,7 +13,7 @@ UCLASS()
 class BEADURINC_API UHitReactGameplayAbility : public UGameplayAbility
 {
 	GENERATED_BODY()
-	
+private:
 	/** Montage to play on blocking attacks */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimMontage> OnBlock;
@@ -34,11 +34,5 @@ protected:
 	/**
 	 * Checks whether the actor blocks the attack or gets hurt
 	 */
-	virtual void ActivateAbility
-	(
-		const FGameplayAbilitySpecHandle Handle,
-		const FGameplayAbilityActorInfo* ActorInfo,
-		const FGameplayAbilityActivationInfo ActivationInfo,
-		const FGameplayEventData* TriggerEventData
-	) override;
+	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 };
