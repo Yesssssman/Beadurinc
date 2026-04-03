@@ -18,7 +18,7 @@
  *								   won't be affected by this(Health, Mana, etc.), while data that
  *								   hold the gameplay progression shouldn't be discarded due to
  *								   a player object is destroyed.
- *								   
+ *
  *								   PlayerState provides a permanent and coherent space to save data
  *								   that needs to persist in entire gameplay. In this way, developers
  *								   can keep the old data when player respawning occurs and determine
@@ -30,49 +30,53 @@ class BEADURINC_API ABeadurincPlayerState : public APlayerState, public IAbility
 {
 	GENERATED_BODY()
 
-private:
-	/// Keeping ASC in PlayerState will persist the player data (cooldown, score) after death
-	/// and respawn, allowing a player respawns with previous data. 
-	UPROPERTY()
-	UAbilitySystemComponent* AbilitySystemComponent;
-	
-	/** Attribute Set Class */
-	UPROPERTY(EditDefaultsOnly, Category="Attribute")
-	TSubclassOf<UAttributeSet> AttributeSetClass;
-	
-	/** Gameplay Ability class for Combo Attacks */
-	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
-	TSubclassOf<UGameplayAbility> ComboAttackAbility;
-	
-	/** Gameplay Ability class for Blocking */
-	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
-	TSubclassOf<UGameplayAbility> BlockAbility;
-	
-	/** Gameplay Ability class for Rolling */
-	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
-	TSubclassOf<UGameplayAbility> RollAbility;
-	
-	/** Data Table for initializing AttributeSet data */
-	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
-	TObjectPtr<UDataTable> InitialStatsTable;
-	
-protected:
-	/** Gameplay Abilities Attribute Set */
-	UPROPERTY()
-	TObjectPtr<UAttributeSet> AttributeSet;
-	
 public:
 
 	/** Constructor */
 	ABeadurincPlayerState();
 
+protected:
+
 	virtual void BeginPlay() override;
-	
+
+public:
+
 	/** Reset all stats to initial values */
 	void ResetStats();
-	
+
 	/** Returns Ability Component object **/
 	FORCEINLINE virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override { return AbilitySystemComponent; };
-	
+
 	FORCEINLINE virtual TObjectPtr<UAttributeSet> GetAttributeSet() const { return AttributeSet; };
+
+private:
+	/// Keeping ASC in PlayerState will persist the player data (cooldown, score) after death
+	/// and respawn, allowing a player respawns with previous data.
+	UPROPERTY()
+	UAbilitySystemComponent* AbilitySystemComponent;
+
+	/** Attribute Set Class */
+	UPROPERTY(EditDefaultsOnly, Category="Attribute")
+	TSubclassOf<UAttributeSet> AttributeSetClass;
+
+	/** Gameplay Ability class for Combo Attacks */
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
+	TSubclassOf<UGameplayAbility> ComboAttackAbility;
+
+	/** Gameplay Ability class for Blocking */
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
+	TSubclassOf<UGameplayAbility> BlockAbility;
+
+	/** Gameplay Ability class for Rolling */
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
+	TSubclassOf<UGameplayAbility> RollAbility;
+
+	/** Data Table for initializing AttributeSet data */
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
+	TObjectPtr<UDataTable> InitialStatsTable;
+
+protected:
+	/** Gameplay Abilities Attribute Set */
+	UPROPERTY()
+	TObjectPtr<UAttributeSet> AttributeSet;
 };

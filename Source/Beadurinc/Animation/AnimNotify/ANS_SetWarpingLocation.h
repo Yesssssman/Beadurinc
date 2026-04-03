@@ -12,13 +12,13 @@ UCLASS()
 class BEADURINC_API UANS_SetWarpingLocation : public UAnimNotifyState
 {
 	GENERATED_BODY()
-	
+
+protected:
+	virtual void NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime, const FAnimNotifyEventReference& EventReference) override;
+
 private:
-	
+
 	/** Custom distancing length */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Correction", meta = (AllowPrivateAccess = true))
 	double Distancing;
-	
-protected:
-	virtual void NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime, const FAnimNotifyEventReference& EventReference) override;
 };

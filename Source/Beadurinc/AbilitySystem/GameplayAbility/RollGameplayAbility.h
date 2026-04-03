@@ -6,21 +6,14 @@
 #include "Abilities/GameplayAbility.h"
 #include "RollGameplayAbility.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class BEADURINC_API URollGameplayAbility : public UGameplayAbility
 {
 	GENERATED_BODY()
 
-private:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Animations, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UAnimMontage> RollingMontage;
-	
 public:
 	URollGameplayAbility();
-	
+
 protected:
 	/**
 	 * Checks if the player can do combo attacks
@@ -31,10 +24,14 @@ protected:
 	 * Takes blocking stance
 	 */
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
-	
+
 private:
-	
+
 	/** On rolling animation ends */
 	UFUNCTION()
 	void MontageEnds();
+
+private:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Animations, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UAnimMontage> RollingMontage;
 };

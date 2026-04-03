@@ -14,22 +14,26 @@ class BEADURINC_API AAncientKingCharacter : public AFighterCharacter
 {
 	GENERATED_BODY()
 
+public:
+
+	// Sets default values for this character's properties
+	AAncientKingCharacter();
+
+protected:
+
+	virtual void BeginPlay() override;
+
+public:
+
+	/** Returns currently targeting actor by AI Controller */
+	virtual TObjectPtr<ACharacter> GetAttackTarget() override;
+
 private:
 	/** Attribute Set Class */
 	UPROPERTY(EditDefaultsOnly, Category="Gameplay Abilities")
 	TSubclassOf<UAttributeSet> AttributeSetClass;
-	
+
 	/** Data Table for initializing AttributeSet data */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Gameplay Abilities", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UDataTable> InitialStatsTable;
-	
-public:
-	
-	virtual void BeginPlay() override;
-	
-	/** Returns currently targeting actor by AI Controller */
-	virtual TObjectPtr<ACharacter> GetAttackTarget() override;
-	
-	// Sets default values for this character's properties
-	AAncientKingCharacter();
 };

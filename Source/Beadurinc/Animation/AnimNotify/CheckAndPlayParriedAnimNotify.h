@@ -11,13 +11,13 @@ class BEADURINC_API UCheckAndPlayParriedAnimNotify : public UAnimNotifyState
 {
 	GENERATED_BODY()
 
+public:
+
+	virtual void NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime, const FAnimNotifyEventReference& EventReference) override;
+
 private:
-	
+
 	/** An animation montage to play when the attack get parried */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = true))
 	TObjectPtr<UAnimMontage> Parried;
-	
-public:
-	
-	virtual void NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime, const FAnimNotifyEventReference& EventReference) override;
 };

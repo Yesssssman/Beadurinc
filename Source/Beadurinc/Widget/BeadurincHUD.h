@@ -9,38 +9,13 @@
 class APlayerCharacter;
 class AFighterCharacter;
 
-/**
- * 
- */
 UCLASS(abstract)
 class BEADURINC_API ABeadurincHUD : public AHUD
 {
 	GENERATED_BODY()
 
-private:
-	/**
-	 * A target indicator when player activates Camera Lock-on feature
-	 */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
-	UUserWidget* LockOnIndicator;
-
-	/**
-	 * A stackable widget container that displays boss stats in progression bar
-	 * 
-	 * Called on boss characters perceives the player and removed when the boss
-	 * no more sensing the player.
-	 */
-	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = true))
-	UUserWidget* BossBarLayout;
-
-	/**
-	 * Main player character
-	 */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	TObjectPtr<APlayerCharacter> PlayerCharacter;
-	
 public:
-	
+
 	/**
 	 * Adds a boss stat bar to widget
 	 * @param BossActor A boss character that will bound to widget
@@ -60,4 +35,26 @@ public:
 	 * Called on PlayerController starts possessing character
 	 */
 	void InitPlayer(const TObjectPtr<APlayerCharacter> SpawnedPlayer);
+
+private:
+	/**
+	 * A target indicator when player activates Camera Lock-on feature
+	 */
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	UUserWidget* LockOnIndicator;
+
+	/**
+	 * A stackable widget container that displays boss stats in progression bar
+	 *
+	 * Called on boss characters perceives the player and removed when the boss
+	 * no more sensing the player.
+	 */
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	UUserWidget* BossBarLayout;
+
+	/**
+	 * Main player character
+	 */
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	TObjectPtr<APlayerCharacter> PlayerCharacter;
 };

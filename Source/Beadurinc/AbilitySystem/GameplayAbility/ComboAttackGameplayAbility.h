@@ -8,21 +8,20 @@
 #include "ComboAttackGameplayAbility.generated.h"
 
 class UAbilityTask_WaitGameplayEvent;
-/**
- * 
- */
+
 UCLASS()
 class BEADURINC_API UComboAttackGameplayAbility : public UGameplayAbility
 {
 	GENERATED_BODY()
-	
+
 public:
 	/// Constructor
 	UComboAttackGameplayAbility();
-	
+
+public:
 	/** Plays next combo montage by ability task */
 	void PlayNextComboAttack();
-	
+
 protected:
 	/**
 	 * Checks if the player can do combo attacks
@@ -38,33 +37,33 @@ protected:
 	 * Called when the player press the ability key *while ability is activated*
 	 */
 	virtual void InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
-	
+
 	/**
 	 * Called on the ability finished both by force and normal finish
 	 */
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	
+
 	/** Reset combo counter to 0 */
 	UFUNCTION()
 	void ResetComboCounter();
-	
+
 	/** Called on montage interrupted by another montage being played */
 	UFUNCTION()
 	void OnMontageInterrupted();
-	
+
 	/** Called on ability task completed */
 	UFUNCTION()
 	void OnMontageCompleted();
-	
+
 private:
-	
+
 	/** Combo counter */
 	int ComboCounter;
-	
+
 	/** A timer handle to reset input buffer */
 	UPROPERTY()
 	UAbilityTask_PlayMontageAndWait* LastComboMontagePlayTask;
-	
+
 	/** Ability Task waiting for notify */
 	UPROPERTY()
 	UAbilityTask_WaitGameplayEvent* ComboOpenTask;

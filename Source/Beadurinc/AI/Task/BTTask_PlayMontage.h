@@ -8,26 +8,26 @@
 #include "BTTask_PlayMontage.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class BEADURINC_API UBTTask_PlayMontage : public UBTTaskNode
 {
 	GENERATED_BODY()
 
+public:
+
+	UBTTask_PlayMontage();
+
+protected:
+
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+
+	/** Latent task for montage finishes */
+	void OnMontageFinished(UAnimMontage* Montage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp) const;
+
 private:
 	/** Animation Montage to play. Must compatible with the skeleton that BT owner has */
 	UPROPERTY(Category = Node, EditAnywhere)
 	FValueOrBBKey_Object MontageToPlay = TObjectPtr<UAnimMontage>();
-	
-public:
-	
-	UBTTask_PlayMontage();
-	
-protected:
-	
-	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-	
-	/** Latent task for montage finishes */
-	void OnMontageFinished(UAnimMontage* Montage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp) const;
 };

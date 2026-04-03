@@ -7,38 +7,38 @@
 #include "HitReactGameplayAbility.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class BEADURINC_API UHitReactGameplayAbility : public UGameplayAbility
 {
 	GENERATED_BODY()
-	
-private:
-	/** Montage to play on blocking attacks */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UAnimMontage> OnBlock;
-	
-	/** Montages to play on parrying attacks. Identified by AttackTypeTags */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations", meta = (AllowPrivateAccess = "true"))
-	TMap<FGameplayTag, UAnimMontage*> OnParry;
-	
-	/** Montage to play on damage applied to health */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UAnimMontage> OnHurt;
-	
-	/** Attacker pause time when hit */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations", meta = (AllowPrivateAccess = "true"))
-	float HitStop;
-	
-	/** Whether the owner actor should look at attacker on hit */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Control", meta = (AllowPrivateAccess = "true"))
-	bool LookAttacker;
-	
+
 protected:
-	
+
 	/**
 	 * Checks whether the actor blocks the attack or gets hurt
 	 */
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
+
+private:
+	/** Montage to play on blocking attacks */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UAnimMontage> OnBlock;
+
+	/** Montages to play on parrying attacks. Identified by AttackTypeTags */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations", meta = (AllowPrivateAccess = "true"))
+	TMap<FGameplayTag, UAnimMontage*> OnParry;
+
+	/** Montage to play on damage applied to health */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UAnimMontage> OnHurt;
+
+	/** Attacker pause time when hit */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations", meta = (AllowPrivateAccess = "true"))
+	float HitStop;
+
+	/** Whether the owner actor should look at attacker on hit */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Control", meta = (AllowPrivateAccess = "true"))
+	bool LookAttacker;
 };

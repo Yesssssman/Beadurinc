@@ -6,13 +6,20 @@
 #include "BehaviorTree/BTDecorator.h"
 #include "BTDecorator_DistanceWithin.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class BEADURINC_API UBTDecorator_DistanceWithin : public UBTDecorator
 {
 	GENERATED_BODY()
+
+public:
+
+	/** Constructor */
+	UBTDecorator_DistanceWithin();
+
+protected:
+
+	/** Returns a check result of decorator */
+	virtual bool CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
 
 private:
 	/** The Blackboard key for target actor */
@@ -22,14 +29,4 @@ private:
 	/** The threshold distance to judge if target is within boundary */
 	UPROPERTY(EditAnywhere, Category = "Condition", meta = (AllowPrivateAccess = true))
 	float Within = 100.0F;
-
-public:
-	
-	/** Constructor */
-	UBTDecorator_DistanceWithin();
-	
-protected:
-	
-	/** Returns a check result of decorator */
-	virtual bool CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
 };
