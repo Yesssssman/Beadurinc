@@ -13,10 +13,15 @@ UCLASS()
 class BEADURINC_API UHitReactGameplayAbility : public UGameplayAbility
 {
 	GENERATED_BODY()
+	
 private:
 	/** Montage to play on blocking attacks */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimMontage> OnBlock;
+	
+	/** Montages to play on parrying attacks. Identified by AttackTypeTags */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations", meta = (AllowPrivateAccess = "true"))
+	TMap<FGameplayTag, UAnimMontage*> OnParry;
 	
 	/** Montage to play on damage applied to health */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations", meta = (AllowPrivateAccess = "true"))
@@ -31,6 +36,7 @@ private:
 	bool LookAttacker;
 	
 protected:
+	
 	/**
 	 * Checks whether the actor blocks the attack or gets hurt
 	 */

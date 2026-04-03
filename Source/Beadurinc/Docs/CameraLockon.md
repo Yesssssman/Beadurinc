@@ -249,3 +249,112 @@ void APlayerCharacter::UpdateCameraLock(float DeltaTime)
 *결과*
 
 ![CameraSolved](img/CameraSolved.gif)
+___
+
+## 수정사항2
+
+수정사항1의 결과를 보면 타겟이 플레이어의 위치와 가까울 수록 화면 왼쪽으로 치우쳐지므로 여전히 화면의 오른쪽 공간을 활용하지 못하는
+느낌이다. 따라서 화면 정중앙이 타겟의 위치가 아닌 타겟과 플레이어의 중간에 위치하면 좋겠다 생각하였다.
+
+이를 위해 카메라가 바라볼 위치를 타겟의 위치 대신 플레이어와 타겟 사이, 즉.
+
+> 플레이어 위치벡터 + (타겟 위치벡터 - 플레이어 위치벡터) / 2
+
+를 기준으로 카메라 회전을 계산하도록 하였다.
+
+또한, 플레이어의 시점과 카메라 시점이 일치하지 않는 TPS 카메라의 특수성을 고려하여, 현재 계산에 오차가 없는지 정확히 검증하여 보기로
+하였다.
+
+![TPSCalculation1](img/TPSCalculation1.png)
+
+위 그림은 현재 Camera Lock-On 시스템이 어떻게 카메라의 각도를 계산하는지를 도식화한 것이다. 카메라는 Blueprint에 설정된 초기 위치
+벡터를 기준으로 액터의 회전값에 곱해져 World space상의 위치를 구한다. 카메라 락온 확성화시 액터는 항상 타겟을 바라보므로, 액터의 회전
+값에 곱해져 월드 좌표계를 구하는것 까지는 좋으나, 카메라의 초기 위치 자체가 문제가 있음을 알 수 있었다.
+
+![TPSCalculation2](img/TPSCalculation2.png)
+
+현재 회전값은 카메라 초기 위치의 월드상 좌표 위치를 기준으로 계산된다. 하지만 이 계산이 원하는 목표 지점을 화면 정 중앙에 놓지
+않는다는 문제가 있는데 이는 회전값이 카메라가 아닌 Spring Arm에 적용된다는 사실에 기인한다 (그림의 보라색 원). 현재 계산된 회전값은
+초록색 점을 기준으로 하는데 이 회전값을 `SetControlRotation()` 함수를 통해 적용하면 카메라는 검은 원을 따라 이동한다. 따라서
+회전값의 계산은 카메라 회전축의 중앙이 되어야 우리가 원하는 주황색 점으로 카메라를 위치시킬 수 있다.
+
+```c++
+void APlayerCharacter::BeginPlay()
+{
+    ...
+    
+    // Remove the backward translation
+    // The calculation of the rotation for camera lock-on should be based on the center of the camera orbit, not the
+    // final location of relative camera position in world space coord.
+    //
+    // By removing the spring arm length, we can get the center of the circle that the camera draws. This point will
+    // calculate the correct rotation to locate the lock-on destination point to the center of the screen applied to
+    // the spring arm.
+    InitLocalCameraLocation.X = 0;
+}
+```
+
+이를 위해 카메라의 초기 Relative Position을 구할 때 Spring Arm 컴포넌트의 길이를 제거하도록 하였다. 따라서
+`InitLocalCameraLocation`은 카메라를 회전시키는 피벗의 상대 위치를 저장하도록 하였다.
+
+![TPSCalculation3](img/TPSCalculation3.png)
+
+그 다음 카메라 락온을 Update하는 함수를 다음과 같이 수정하였다.
+
+```c++
+void APlayerCharacter::UpdateCameraLock(float DeltaTime)
+{
+    APlayerController* PC = Cast<APlayerController>(GetController());
+    if (!PC) return;
+    
+    // Sets actor rotation
+    // Decoupled from camera rotation since actor eye position is different from camera position
+    // Calculates in the same way, using (target - eye).Rotation()
+    FRotator DesiredActorRot = (LockingOnCharacter->GetActorLocation() - GetActorLocation()).Rotation();
+    FRotator CurrentActorRot = GetActorRotation();
+    FRotator NewActorRot = FMath::RInterpTo(CurrentActorRot, DesiredActorRot, DeltaTime, 8.f);
+    
+    // Won't rotate in pitch
+    NewActorRot.Pitch = CurrentActorRot.Pitch;
+    SetActorRotation(NewActorRot);
+    
+    // Calculate world location of camera initial point
+    // Reused 'DesiredActorRot' instead of 'GetActorRot()' so it's not affected by ongoing interpolation
+    FVector WorldLocalCamera = DesiredActorRot.RotateVector(InitLocalCameraLocation);
+    
+    // Get the camera world location where to start calculating lock-on
+    FVector LockOnStart = GetActorLocation() + WorldLocalCamera;
+    
+    // Find a "middle point" of player and target actor 
+    FVector TargetLoc =	GetActorLocation() + (LockingOnCharacter->GetActorLocation() - GetActorLocation()) / 2;
+    
+    // Calculate rotator from vector camera -> target
+    FRotator DesiredRot = (TargetLoc - LockOnStart).Rotation();
+    FRotator CurrentRot = PC->GetControlRotation();
+    
+    // Get interpolated rotator by current rotation -> desired rotation
+    FRotator NewRot = FMath::RInterpTo(CurrentRot, DesiredRot, DeltaTime, 8.f);
+    
+    // Set to the calculated rotation
+    PC->SetControlRotation(NewRot);
+}
+```
+
+주요 변경사항으로는 Actor의 회전을 먼저 계산하였는데 이는 `DesiredActorRot`을 재사용하여 카메라 락온 회전값 계산 시 보간중인 값 대신
+최종적인 회전값을 계산하기 위해서이다.
+
+그 다음 `LockOnStart` 값은 다음과 같이 계산된다.
+
+> (액터의 위치) + [ (카메라 피벗의 초기 위치벡터) x (액터 -> 타겟 방향 회전) ]
+
+`TargetLoc`은 락온의 끝 지점으로, 위에서 언급한 바와 같이 다음과 같이 계산된다.
+
+> 플레이어 위치벡터 + (타겟 위치벡터 - 플레이어 위치벡터) / 2
+
+마지막으로 `LockOnStart`에서 `TargetLoc` 방향으로의 회전 값을 Control Rotation으로 설정한다.
+
+---
+
+*결과*
+
+![LockOnFinal](img/LockOnFinal.gif)

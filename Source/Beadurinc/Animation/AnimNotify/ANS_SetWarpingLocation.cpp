@@ -10,30 +10,33 @@
 
 void UANS_SetWarpingLocation::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime, const FAnimNotifyEventReference& EventReference)
 {
-	if (AFighterCharacter* Owner = Cast<AFighterCharacter>(MeshComp->GetOwner()))
-	{
-		// Checks the validity of an attack target
-		if (IsValid(Owner->GetAttackTarget()))
-		{
-			// Update the location of Motion Warping target
-			FMotionWarpingTarget MotionWarpingTarget;
-			MotionWarpingTarget.Location = Owner->GetAttackTarget()->GetActorLocation();
+	AFighterCharacter* Owner = Cast<AFighterCharacter>(MeshComp->GetOwner());
+	if (!Owner) return;
+	// Checks the validity of an attack target
+	if (!IsValid(Owner->GetAttackTarget())) return;
 	
-			UCapsuleComponent* OwnerCapsuleComponent = Owner->GetCapsuleComponent();
-			UCapsuleComponent* TargetCapsuleComponent = Owner->GetAttackTarget()->GetCapsuleComponent();
+	// Update the location of Motion Warping target
+	FMotionWarpingTarget MotionWarpingTarget;
+	float Distance = Distancing;
 	
-			// Push the motion warping target location toward myself, by the distance that
-			// equals to the radius of target's capsule component (if exists)
-			if (OwnerCapsuleComponent && TargetCapsuleComponent)
-			{
-				FVector FromTargetToMyself = Owner->GetActorLocation() - Owner->GetAttackTarget()->GetActorLocation();
-				FromTargetToMyself.Normalize(0.05F);
-				FromTargetToMyself *= OwnerCapsuleComponent->GetScaledCapsuleRadius() + TargetCapsuleComponent->GetScaledCapsuleRadius();
-				MotionWarpingTarget.Location += FromTargetToMyself;
-			}
+	UCapsuleComponent* OwnerCapsuleComponent = Owner->GetCapsuleComponent();
+	UCapsuleComponent* TargetCapsuleComponent = Owner->GetAttackTarget()->GetCapsuleComponent();
+
+	// Add the radius of each actor's capsule component to distance
+	if (OwnerCapsuleComponent) Distance += OwnerCapsuleComponent->GetScaledCapsuleRadius();
+	if (TargetCapsuleComponent) Distance += TargetCapsuleComponent->GetScaledCapsuleRadius();
 	
-			MotionWarpingTarget.Name = TEXT("AttackTarget");
-			Owner->GetMotionWarpingComponent()->AddOrUpdateWarpTarget(MotionWarpingTarget);
-		}
-	}
+	FVector ToTarget = Owner->GetAttackTarget()->GetActorLocation() - Owner->GetActorLocation();
+	
+	// Calculate the length of the vector toward actor -> target, then subtract the distancing while keeping the distance
+	// not to be a negative so that the motion warping destination is not behind the owner actor.
+	double Length = ToTarget.Length();
+	double WarpDistance = FMath::Max(Length - Distance, 0.001F);
+	
+	// Apply the distance to the (owner -> target) vector
+	ToTarget *= WarpDistance / Length;
+	
+	MotionWarpingTarget.Location = Owner->GetActorLocation() + ToTarget;
+	MotionWarpingTarget.Name = TEXT("AttackTarget");
+	Owner->GetMotionWarpingComponent()->AddOrUpdateWarpTarget(MotionWarpingTarget);
 }

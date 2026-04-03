@@ -7,6 +7,7 @@
 #include "AbilitySystemInterface.h"
 #include "FighterCharacter.generated.h"
 
+class UGameplayAbility;
 class UAbilitySystemComponent;
 class UAttributeSet;
 class UGameplayEffect;
@@ -21,8 +22,9 @@ UCLASS(abstract)
 class BEADURINC_API AFighterCharacter : public ACharacter, public IAbilitySystemInterface, public IWeaponHolderInterface
 {
 	GENERATED_BODY()
-
+	
 private:
+	
 	/** Holding weapon class */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Equipments", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<AWeaponActor> WeaponActorBlueprint;
@@ -58,6 +60,7 @@ public:
 	AFighterCharacter();
 	
 protected:
+	
 	/** On character first join the world */
 	virtual void BeginPlay() override;
 	
@@ -90,4 +93,9 @@ public:
 	
 	/** Returns Motion Warping manager */
 	FORCEINLINE virtual UMotionWarpingComponent* GetMotionWarpingComponent() const { return MotionWarpingComponent; };
+	
+private:
+	
+	/** Spawn a weapon actor to skeletal mesh socket if `WeaponActorBlueprint` is valid */
+	void SpawnWeaponActorInHandSocket();
 };

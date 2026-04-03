@@ -6,6 +6,7 @@
 #include "Components/CapsuleComponent.h"
 #include "MotionWarpingComponent.h"
 #include "AbilitySystem/AbilityId.h"
+#include "Animation/AnimMetaData.h"
 
 AFighterCharacter::AFighterCharacter()
 {
@@ -20,33 +21,7 @@ void AFighterCharacter::BeginPlay()
 	// Spawn a weapon actor and attach to the hand
 	if (GetMesh() && WeaponActorBlueprint)
 	{
-		// Instigator != Owner under certain cases
-		// e.g. Player shots an arrow using bow: Arrow's owner == bow, but arrow's instigator == player
-		FActorSpawnParameters ActorSpawnParameters;
-		ActorSpawnParameters.Owner = this;
-		ActorSpawnParameters.Instigator = GetInstigator();
-		
-		if (AWeaponActor* WeaponActor = GetWorld()->SpawnActor<AWeaponActor>(WeaponActorBlueprint, ActorSpawnParameters))
-		{
-			// Initialize main hand weapon actor
-			WeaponActorInstance = WeaponActor;
-			
-			if (UCapsuleComponent* CapsuleCollider = WeaponActorInstance->FindComponentByClass<UCapsuleComponent>())
-			{
-				// Gives "NoCollision" at first since weapon only can hurt other characters when activated by anim notify.
-				CapsuleCollider->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-				CapsuleCollider->OnComponentBeginOverlap.AddDynamic(this, &AFighterCharacter::OnMeleeContacts);
-			}
-			
-			WeaponActorInstance->SetActorEnableCollision(false);
-			
-			// Attach a weapon actor to a skeleton socket
-			WeaponActor->AttachToComponent(
-				GetMesh(),
-				FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-				TEXT("Weapon_Socket")
-			);
-		}
+		SpawnWeaponActorInHandSocket();
 	}
 	
 	// Initialize only in authorized side to let them replicated to clients by networking
@@ -57,21 +32,47 @@ void AFighterCharacter::BeginPlay()
 	}
 }
 
+/** Spawn a weapon actor to skeletal mesh socket if `WeaponActorBlueprint` is valid */
+void AFighterCharacter::SpawnWeaponActorInHandSocket()
+{
+	// Instigator != Owner under certain cases
+	// e.g. Player shots an arrow using bow: Arrow's owner == bow, but arrow's instigator == player
+	FActorSpawnParameters ActorSpawnParameters;
+	ActorSpawnParameters.Owner = this;
+	ActorSpawnParameters.Instigator = GetInstigator();
+	
+	AWeaponActor* WeaponActor = GetWorld()->SpawnActor<AWeaponActor>(WeaponActorBlueprint, ActorSpawnParameters);
+	if (!WeaponActor) return;
+	
+	// Initialize main hand weapon actor
+	WeaponActorInstance = WeaponActor;
+	
+	if (UCapsuleComponent* CapsuleCollider = WeaponActorInstance->FindComponentByClass<UCapsuleComponent>())
+	{
+		// Gives "NoCollision" at first since weapon only can hurt other characters when activated by anim notify.
+		CapsuleCollider->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		CapsuleCollider->OnComponentBeginOverlap.AddDynamic(this, &AFighterCharacter::OnMeleeContacts);
+	}
+	
+	WeaponActorInstance->SetActorEnableCollision(false);
+	
+	// Attach a weapon actor to a skeleton socket
+	WeaponActor->AttachToComponent(
+		GetMesh(),
+		FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+		TEXT("Weapon_Socket")
+	);
+}
+
 void AFighterCharacter::OnMeleeContacts(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	AFighterCharacter* OtherFighter = Cast<AFighterCharacter>(OtherActor);
 	
 	// Terminate when the other actor is myself or not implementation of AFightCharacter.
-	if (!OtherFighter || OtherFighter == this)
-	{
-		return;	
-	}
+	if (!OtherFighter || OtherFighter == this) return;	
 	
 	// Prevents "multiple hits" by checking whether the other actor is registered in HitActor container.
-	if (HitActors.Contains(OtherActor))
-	{
-		return;
-	}
+	if (HitActors.Contains(OtherActor)) return;
 	
 	// Payload to contain data that is used in triggering hurt event 
 	FGameplayEventData EventContext;
@@ -80,6 +81,16 @@ void AFighterCharacter::OnMeleeContacts(UPrimitiveComponent* OverlappedComponent
 	EventContext.Instigator = this;
 	EventContext.Target = OtherActor;
 	EventContext.OptionalObject = GetWeaponActor();
+	
+	if (!GetCurrentMontage()->GetMetaData().IsEmpty())
+	{
+		// Magic number warning: attack info should always be at 0'th index. There's no other anim metadata we current use
+		// so consider better implementation when we need more metadata
+		const UAnimMetaData* Metadata = GetCurrentMontage()->GetMetaData()[0];
+		
+		EventContext.OptionalObject2 = Metadata;
+	}
+	
 	EventContext.EventMagnitude = GetWeaponActor()->GetWeaponBaseDamage();
 	EventContext.ContextHandle = GetAbilitySystemComponent()->MakeEffectContext();
 	

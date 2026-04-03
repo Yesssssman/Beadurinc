@@ -8,6 +8,7 @@
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/AbilityId.h"
+#include "AbilitySystem/GameplayTag/AbilityTags.h"
 #include "AbilitySystem/GameplayTag/StateGameplayTags.h"
 
 UComboAttackGameplayAbility::UComboAttackGameplayAbility()
@@ -58,10 +59,7 @@ void UComboAttackGameplayAbility::PlayNextComboAttack()
 
 bool UComboAttackGameplayAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, OUT FGameplayTagContainer* OptionalRelevantTags) const
 {
-	if (!Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags))
-	{
-		return false;
-	}
+	if (!Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags)) return false;
 	
 	if (APlayerCharacter* AbilityOwner = Cast<APlayerCharacter>(ActorInfo->AvatarActor.Get()))
 	{
@@ -79,7 +77,17 @@ bool UComboAttackGameplayAbility::CanActivateAbility(const FGameplayAbilitySpecH
 void UComboAttackGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+	
 	PlayNextComboAttack();
+	
+	UAbilitySystemComponent* OwnerACS = ActorInfo->AbilitySystemComponent.Get();
+	if (!OwnerACS) return;
+	
+	// Cancel blocking ability if enabled
+	FGameplayTagContainer TargetTags;
+	TargetTags.AddTag(AbilityTags::Ability_BlockParry);
+	OwnerACS->CancelAbilities(&TargetTags);
+	OwnerACS->AddLooseGameplayTag(StateGameplayTags::State_BlockingLocked);
 }
 
 /**
@@ -99,22 +107,6 @@ void UComboAttackGameplayAbility::InputPressed(const FGameplayAbilitySpecHandle 
 			AbilityOwner->BufferInput(static_cast<int32>(EAbilityId::Combo_Attack));
 		}
 	}
-}
-
-/**
- * Called when the player release the ability key *while ability is activated*
- */
-void UComboAttackGameplayAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
-{
-	Super::InputReleased(Handle, ActorInfo, ActivationInfo);
-}
-
-/**
- * Called when the combo combo attack montage is done by force
- */
-void UComboAttackGameplayAbility::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
-{
-	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 }
 
 /**

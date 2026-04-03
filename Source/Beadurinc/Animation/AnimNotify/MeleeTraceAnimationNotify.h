@@ -4,10 +4,13 @@
 #include "Animation/AnimNotifies/AnimNotifyState.h"
 #include "MeleeTraceAnimationNotify.generated.h"
 
+class UAnimMontage;
+
 UCLASS()
 class BEADURINC_API UMeleeTraceAnimationNotify : public UAnimNotifyState
 {
 	GENERATED_BODY()
+
 protected:
 	
 	virtual void NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference) override;

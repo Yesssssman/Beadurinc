@@ -1,7 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "WeaponActor.h"
-#include "GameFramework/Character.h"
 
 AWeaponActor::AWeaponActor()
 {
@@ -11,10 +10,8 @@ AWeaponActor::AWeaponActor()
 
 TObjectPtr<UAnimMontage> AWeaponActor::GetComboAttackAt(const unsigned int& Index) const
 {
-	if (GetComboSequenceLength() > Index)
-	{
-		return WeaponComboAttacks[Index];
-	}
+	// Index guard
+	if (Index < 0 || GetComboSequenceLength() <= Index) return nullptr;
 	
-	return nullptr;
+	return WeaponComboAttacks[Index];
 }

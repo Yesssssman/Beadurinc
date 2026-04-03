@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "GameplayEffect.h"
 #include "WeaponActor.generated.h"
 
 class ACharacter;

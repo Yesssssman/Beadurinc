@@ -15,8 +15,6 @@
 #include "AbilitySystem/AbilityId.h"
 #include "MotionWarpingComponent.h"
 #include "GameData/BeadurincPlayerState.h"
-
-#include "AbilitySystem/GameplayTag/StateGameplayTags.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 /** Constructor */
@@ -67,6 +65,15 @@ void APlayerCharacter::BeginPlay()
 	
 	// Save the initial camera local location
 	InitLocalCameraLocation = CameraLocal;
+	
+	// Remove the backward translation
+	// The calculation of the rotation for camera lock-on should be based on the center of the camera orbit, not the
+	// final location of relative camera position in world space coord.
+	//
+	// By removing the spring arm length, we can get the center of the circle that the camera draws. This point will
+	// calculate the correct rotation to locate the lock-on destination point to the center of the screen applied to
+	// the spring arm.
+	InitLocalCameraLocation.X = 0;
 }
 
 // Handle server side respawn
@@ -235,10 +242,7 @@ void APlayerCharacter::ToggleCamLock(const FInputActionValue& Value)
 		// To get a local player's controller, pass 0 to PlayerIndex
 		const APlayerController* PC = Cast<APlayerController>(GetController());
 		
-		if (!PC)
-		{
-			return;
-		}
+		if (!PC) return;
 		
 		// Store the viewport size
 		int32 ViewX, ViewY;
@@ -319,32 +323,30 @@ void APlayerCharacter::ToggleCamLock(const FInputActionValue& Value)
 
 void APlayerCharacter::DoMove(float Right, float Forward)
 {
-	if (GetController() != nullptr)
-	{
-		// find out which way is forward
-		const FRotator Rotation = GetController()->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
+	if (GetController() == nullptr) return;
+	
+	// find out which way is forward
+	const FRotator Rotation = GetController()->GetControlRotation();
+	const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-		// get forward vector
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	// get forward vector
+	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 
-		// get right vector 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+	// get right vector 
+	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-		// add movement 
-		AddMovementInput(ForwardDirection, Forward);
-		AddMovementInput(RightDirection, Right);
-	}
+	// add movement 
+	AddMovementInput(ForwardDirection, Forward);
+	AddMovementInput(RightDirection, Right);
 }
 
 void APlayerCharacter::DoLook(float Yaw, float Pitch)
 {
-	if (GetController() != nullptr)
-	{
-		// add yaw and pitch input to controller
-		AddControllerYawInput(Yaw * (bLockingOnCamera ? 0.05F : 1.0F));
-		AddControllerPitchInput(Pitch * (bLockingOnCamera ? 0.05F : 1.0F));
-	}
+	if (GetController() == nullptr) return;
+	
+	// add yaw and pitch input to controller
+	AddControllerYawInput(Yaw * (bLockingOnCamera ? 0.05F : 1.0F));
+	AddControllerPitchInput(Pitch * (bLockingOnCamera ? 0.05F : 1.0F));
 }
 
 void APlayerCharacter::DoJumpStart()
@@ -362,10 +364,7 @@ void APlayerCharacter::DoJumpEnd()
 void APlayerCharacter::PressAbility(int32 InputId)
 {
 	// Clear existing Buffered Input to prevent double execution
-	if (HasBufferedInput())
-	{
-		ClearInputBuffer();
-	}
+	if (HasBufferedInput()) ClearInputBuffer();
 	
 	if (FGameplayAbilitySpec* Spec = AbilitySystemComponent->FindAbilitySpecFromInputID(InputId))
 	{
@@ -400,23 +399,21 @@ void APlayerCharacter::BufferInput(int32 InputID)
 void APlayerCharacter::FlushBufferedInput()
 {
 	// Checks buffered inputs in local client (to avoid unnecessary call)
-	if (IsLocallyControlled() && HasBufferedInput())
-	{
-		// Try activating the buffered input if it entered within the buffer window
-		if (GetWorld()->GetTimeSeconds() - BufferedInput->TimeStamp <= BUFFER_WINDOW_SECONDS)
-		{
-			const int32 InputID = BufferedInput->InputID;
-			
-			// On input buffering activation, we do not care about whether it success activating
-			AbilitySystemComponent->AbilityLocalInputPressed(InputID);
-			
-			// Clear the input buffer
-			// This results in clearing any buffered input via GameplayAbility#InputPressed, which is
-			// the intention of the system, so input buffering won't create another input buffering again.
-			// @see UComboAttackGameplayAbility::InputPressed
-			ClearInputBuffer();
-		}
-	}
+	if (!IsLocallyControlled() || !HasBufferedInput()) return;
+	
+	// Try activating the buffered input if it entered within the buffer window
+	if (GetWorld()->GetTimeSeconds() - BufferedInput->TimeStamp > BUFFER_WINDOW_SECONDS) return;
+	
+	const int32 InputID = BufferedInput->InputID;
+	
+	// On input buffering activation, we do not care about whether it succeed in activating
+	AbilitySystemComponent->AbilityLocalInputPressed(InputID);
+	
+	// Clear the input buffer
+	// This results in clearing any buffered input via GameplayAbility#InputPressed, which is
+	// the intention of the system, so input buffering won't create another input buffering again.
+	// @see UComboAttackGameplayAbility::InputPressed
+	ClearInputBuffer();
 }
 
 /** Clear Input buffer */
@@ -436,70 +433,42 @@ void APlayerCharacter::UpdateCameraLock(float DeltaTime)
 {
 	APlayerController* PC = Cast<APlayerController>(GetController());
 	if (!PC) return;
-	
-	// Calculate world location of camera initial point
-	FVector WorldLocalCamera = GetActorRotation().RotateVector(InitLocalCameraLocation);
-	
-	// Get the camera rotation
-	FVector LockOnStart = GetActorLocation() + WorldLocalCamera;
-	
-	// Add the half height of the target's collider to aim at the center of the target
-	FVector TargetLoc =	LockingOnCharacter->GetActorLocation();
 
-	// Calculate rotator from vector camera -> target
-	FRotator DesiredRot = (TargetLoc - LockOnStart).Rotation();
-	FRotator CurrentRot = PC->GetControlRotation();
-	
-	// Get interpolated rotator by current rotation -> desired rotation
-	FRotator NewRot = FMath::RInterpTo(CurrentRot, DesiredRot, DeltaTime, 10.f);
-	
-	// Set to the calculated rotation
-	PC->SetControlRotation(NewRot);
-	
 	// Sets actor rotation
-	// Decoupled with camera rotation since actor eye position is different from camera position
-	// Calculate in the same way, using (target - eye).Rotation()
-	FVector ActorLoc = GetActorLocation();
-	FRotator DesiredActorRot = (TargetLoc - ActorLoc).Rotation();
+	// Decoupled from camera rotation since actor eye position is different from camera position
+	// Calculates in the same way, using (target - eye).Rotation()
+	FRotator DesiredActorRot = (LockingOnCharacter->GetActorLocation() - GetActorLocation()).Rotation();
 	FRotator CurrentActorRot = GetActorRotation();
-	FRotator NewActorRot = FMath::RInterpTo(CurrentActorRot, DesiredActorRot, DeltaTime, 10.f);
+	FRotator NewActorRot = FMath::RInterpTo(CurrentActorRot, DesiredActorRot, DeltaTime, 8.f);
 	
 	// Won't rotate in pitch
 	NewActorRot.Pitch = CurrentActorRot.Pitch;
 	SetActorRotation(NewActorRot);
 	
-	// Trace motion warping target location when not attacking.
-	// Otherwise the attack animation follows the target that has been pushed by current attack.
-	if (!AbilitySystemComponent->HasMatchingGameplayTag(StateGameplayTags::State_ComboLocked))
-	{
-		// Update the location of Motion Warping target
-		FMotionWarpingTarget MotionWarpingTarget;
-		MotionWarpingTarget.Location = LockingOnCharacter->GetActorLocation();
-		
-		UCapsuleComponent* OwnerCapsuleComponent = GetCapsuleComponent();
-		UCapsuleComponent* TargetCapsuleComponent = LockingOnCharacter->GetCapsuleComponent();
-		
-		// Push the motion warping target location toward myself, by the distance that
-		// equals to the radius of target's capsule component (if exists)
-		if (OwnerCapsuleComponent && TargetCapsuleComponent)
-		{
-			FVector FromTargetToMyself = GetActorLocation() - LockingOnCharacter->GetActorLocation();
-			FromTargetToMyself.Normalize(0.05F);
-			FromTargetToMyself *= OwnerCapsuleComponent->GetScaledCapsuleRadius() + TargetCapsuleComponent->GetScaledCapsuleRadius();
-			MotionWarpingTarget.Location += FromTargetToMyself;
-		}
-		
-		MotionWarpingTarget.Name = TEXT("AttackTarget");
-		MotionWarpingComponent->AddOrUpdateWarpTarget(MotionWarpingTarget);
-	}
+	// Calculate world location of camera initial point
+	// Reused 'DesiredActorRot' instead of 'GetActorRot()' so it's not affected by ongoing interpolation
+	FVector WorldLocalCamera = DesiredActorRot.RotateVector(InitLocalCameraLocation);
+	
+	// Get the camera world location where to start calculating lock-on
+	FVector LockOnStart = GetActorLocation() + WorldLocalCamera;
+	
+	// Find a "middle point" of player and target actor 
+	FVector TargetLoc =	GetActorLocation() + (LockingOnCharacter->GetActorLocation() - GetActorLocation()) / 2;
+	
+	// Calculate rotator from vector camera -> target
+	FRotator DesiredRot = (TargetLoc - LockOnStart).Rotation();
+	FRotator CurrentRot = PC->GetControlRotation();
+	
+	// Get interpolated rotator by current rotation -> desired rotation
+	FRotator NewRot = FMath::RInterpTo(CurrentRot, DesiredRot, DeltaTime, 8.f);
+	
+	// Set to the calculated rotation
+	PC->SetControlRotation(NewRot);
 }
 
 void APlayerCharacter::LockCamera(ACharacter* Target)
 {
-	if (!IsValid(Target))
-	{
-		return;
-	}
+	if (!IsValid(Target)) return;
 	
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	
