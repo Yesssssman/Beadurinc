@@ -14,6 +14,9 @@ class BEADURINC_API UAttackMetaData : public UAnimMetaData
 	
 public:
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attack")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tag")
 	FGameplayTag AttackTypeTag;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stun")
+	TObjectPtr<UAnimMontage> OnParried; 
 };

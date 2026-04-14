@@ -5,6 +5,7 @@
 #include "Actor/WeaponHolderInterface.h"
 #include "Actor/WeaponActor.h"
 #include "AbilitySystemInterface.h"
+#include "AbilitySystem/AttributeSet/LivingAttributeSet.h"
 #include "FighterCharacter.generated.h"
 
 class UGameplayAbility;
@@ -48,6 +49,9 @@ public:
 	/** Apply Hit Stop on melee strike */
 	void HitStopForTime(const float StopTime);
 
+	/** Play a short parrying stun */
+	void NotifyParried();
+	
 	/** Returns a current attacking target. Determined by camera lock for players, by AI perception for monsters. */
 	virtual TObjectPtr<ACharacter> GetAttackTarget() PURE_VIRTUAL(AFighterCharacter::GetAttackTarget, return nullptr; );
 
@@ -67,7 +71,7 @@ private:
 
 	/** Spawn a weapon actor to skeletal mesh socket if `WeaponActorBlueprint` is valid */
 	void SpawnWeaponActorInHandSocket();
-
+	
 private:
 
 	/** Holding weapon class */
@@ -79,7 +83,11 @@ protected:
 	/** Gameplay Ability class for Hit React */
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
 	TSubclassOf<UGameplayAbility> HitReactAbility;
-
+	
+	/** Gameplay Effect class for Regenerate stamina */
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
+	TSubclassOf<UGameplayEffect> StaminaRegenEffect;
+	
 	/** Motion warping component to track target actor precisely while playing attack animations */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;

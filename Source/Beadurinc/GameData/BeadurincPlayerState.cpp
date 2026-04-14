@@ -24,21 +24,21 @@ void ABeadurincPlayerState::BeginPlay()
 	if (HasAuthority())
 	{
 		// Give combo attack ability
-		if (IsValid(ComboAttackAbility))
+		if (ComboAttackAbility)
 		{
 			FGameplayAbilitySpec ComboAttackAbilitySpec(ComboAttackAbility, 1, static_cast<int32>(EAbilityId::Combo_Attack), this);
 			AbilitySystemComponent->GiveAbility(ComboAttackAbilitySpec);
 		}
 		
 		// Give block ability
-		if (IsValid(BlockAbility))
+		if (BlockAbility)
 		{
 			FGameplayAbilitySpec BlockAbilitySpec(BlockAbility, 1, static_cast<int32>(EAbilityId::Block), this);
 			AbilitySystemComponent->GiveAbility(BlockAbilitySpec);
 		}
 		
 		// Give roll ability
-		if (IsValid(RollAbility))
+		if (RollAbility)
 		{
 			FGameplayAbilitySpec RollAbilitySpec(RollAbility, 1, static_cast<int32>(EAbilityId::Roll), this);
 			AbilitySystemComponent->GiveAbility(RollAbilitySpec);

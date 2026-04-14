@@ -2,11 +2,12 @@
 
 #include "Animation/AnimNotify/StateWindowAnimNotifyState.h"
 #include "AbilitySystemComponent.h"
+#include "Actor/Character/AncientKingCharacter.h"
 #include "Actor/Character/PlayerCharacter.h"
 
 void UStateWindowAnimNotifyState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
-	const APlayerCharacter* BCharacter = Cast<APlayerCharacter>(MeshComp->GetOwner());
+	const AFighterCharacter* BCharacter = Cast<AFighterCharacter>(MeshComp->GetOwner());
 	if (!BCharacter) return;
 	
 	for (FGameplayTag StateTag : StateTags)
@@ -18,7 +19,7 @@ void UStateWindowAnimNotifyState::NotifyBegin(USkeletalMeshComponent* MeshComp, 
 
 void UStateWindowAnimNotifyState::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
-	const APlayerCharacter* BCharacter = Cast<APlayerCharacter>(MeshComp->GetOwner());
+	const AFighterCharacter* BCharacter = Cast<AFighterCharacter>(MeshComp->GetOwner());
 	if (!BCharacter) return;
 	
 	for (FGameplayTag StateTag : StateTags)

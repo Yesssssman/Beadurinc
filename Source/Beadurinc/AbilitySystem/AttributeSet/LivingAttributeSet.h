@@ -16,11 +16,13 @@ class BEADURINC_API ULivingAttributeSet : public UAttributeSet
 	GENERATED_BODY()
 
 public:
-	/// Called before modifying values. Allows developers to validate modified value to clamp within bounds or
-	/// to execute some pre-modification logics.
+	/** Constructor */
+	ULivingAttributeSet();
+	
+	/** Called before any change is applied to attribute value */
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 
-	/// Called after attribute value is modified. Allows developers to define custom logic after modification occurs.
+	/** Called after attribute value change is confirmed */
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 
 private:
@@ -44,7 +46,13 @@ private:
 	/// Required for networking attributes
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+private:
+	
+	/** Information about max value of Attributes */
+	TMap<FGameplayAttribute, FGameplayAttribute> MaxValues;
+	
 public:
+	
 	/// Define a data instance for character's maximum health
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_MaxHealth, meta = (AllowPrivateAccess))
 	FGameplayAttributeData MaxHealth;

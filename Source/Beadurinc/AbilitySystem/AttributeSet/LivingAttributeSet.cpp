@@ -2,8 +2,15 @@
 
 
 #include "AbilitySystem/AttributeSet/LivingAttributeSet.h"
+#include "AbilitySystemComponent.h"
 #include "GameplayEffectExtension.h"
 #include "Net/UnrealNetwork.h"
+
+ULivingAttributeSet::ULivingAttributeSet()
+{
+	MaxValues.Add(GetHealthAttribute(), GetMaxHealthAttribute());
+	MaxValues.Add(GetStaminaAttribute(), GetMaxStaminaAttribute());
+}
 
 void ULivingAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -42,27 +49,14 @@ void ULivingAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute
 {
 	Super::PreAttributeChange(Attribute, NewValue);
 	
-	// Clamp values to 0 ~ maximum
-	// This blocks GameplayEffect
-	if (Attribute == GetHealthAttribute())
+	if (const FGameplayAttribute* MaxAttribute = MaxValues.Find(Attribute))
 	{
-		NewValue = FMath::Clamp(NewValue, 0.0F, GetMaxHealth());
-	}
-	else if (Attribute == GetStaminaAttribute())
-	{
-		NewValue = FMath::Clamp(NewValue, 0.0F, GetMaxStamina());
+		// Clamp the newly received value
+		NewValue = FMath::Clamp(NewValue, 0.0F, MaxAttribute->GetNumericValue(this));
 	}
 }
 
 void ULivingAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
-	/// Compare attribute to check if the modificed attribute is Health 
-	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
-	{
-		SetHealth(FMath::Clamp(GetHealth(), 0.0F, GetMaxHealth()));
-	}
-	else if (Data.EvaluatedData.Attribute == GetStaminaAttribute())
-	{
-		SetStamina(FMath::Clamp(GetStamina(), 0.0F, GetMaxStamina()));
-	}
+	// Trigger any event..
 }

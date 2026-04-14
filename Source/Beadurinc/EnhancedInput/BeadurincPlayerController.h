@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "BeadurincPlayerController.generated.h"
 
+class AFighterCharacter;
 class UInputMappingContext;
 class UUserWidget;
 

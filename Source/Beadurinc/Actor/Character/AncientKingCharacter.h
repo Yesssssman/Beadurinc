@@ -4,13 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "FighterCharacter.h"
+#include "MonsterCharacter.h"
 #include "AncientKingCharacter.generated.h"
 
-class UAbilitySystemComponent;
-class ULivingAttributeSet;
-
 UCLASS()
-class BEADURINC_API AAncientKingCharacter : public AFighterCharacter
+class BEADURINC_API AAncientKingCharacter : public AMonsterCharacter
 {
 	GENERATED_BODY()
 
@@ -34,6 +32,6 @@ private:
 	TSubclassOf<UAttributeSet> AttributeSetClass;
 
 	/** Data Table for initializing AttributeSet data */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Gameplay Abilities", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Data Asset", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UDataTable> InitialStatsTable;
 };

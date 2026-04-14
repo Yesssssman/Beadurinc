@@ -6,7 +6,9 @@
 #include "Components/CapsuleComponent.h"
 #include "MotionWarpingComponent.h"
 #include "AbilitySystem/AbilityId.h"
+#include "AbilitySystem/AttributeSet/LivingAttributeSet.h"
 #include "Animation/AnimMetaData.h"
+#include "Animation/Metadata/AttackMetaData.h"
 
 AFighterCharacter::AFighterCharacter()
 {
@@ -29,6 +31,20 @@ void AFighterCharacter::BeginPlay()
 	{
 		FGameplayAbilitySpec HitReactSpec(HitReactAbility, 1, static_cast<int32>(EAbilityId::Hit_React), this);
 		AbilitySystemComponent->GiveAbility(HitReactSpec);
+		
+		// Add passive GE: stamina regeneration on inactivity
+		if (StaminaRegenEffect)
+		{
+			FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+			EffectContext.AddSourceObject(this);
+			
+			FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(StaminaRegenEffect, 1.0f, EffectContext);
+
+			if (SpecHandle.IsValid())
+			{
+				//AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			}
+		}
 	}
 }
 
@@ -64,6 +80,20 @@ void AFighterCharacter::SpawnWeaponActorInHandSocket()
 	);
 }
 
+/** Play a short parrying stun */
+void AFighterCharacter::NotifyParried()
+{
+	UAnimMontage* CurrentPlayingMontage = GetCurrentMontage();
+	if (!CurrentPlayingMontage) return;
+	
+	for (UAnimMetaData* ComboMetaData : CurrentPlayingMontage->GetMetaData())
+	{
+		UAttackMetaData* AttackAnimMetaData = Cast<UAttackMetaData>(ComboMetaData);
+		if (!AttackAnimMetaData || !AttackAnimMetaData->OnParried) continue;
+		PlayAnimMontage(AttackAnimMetaData->OnParried);
+	}
+}
+
 void AFighterCharacter::OnMeleeContacts(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	AFighterCharacter* OtherFighter = Cast<AFighterCharacter>(OtherActor);
@@ -91,7 +121,6 @@ void AFighterCharacter::OnMeleeContacts(UPrimitiveComponent* OverlappedComponent
 		EventContext.OptionalObject2 = Metadata;
 	}
 	
-	EventContext.EventMagnitude = GetWeaponActor()->GetWeaponBaseDamage();
 	EventContext.ContextHandle = GetAbilitySystemComponent()->MakeEffectContext();
 	
 	// Calculates the first hit location by the ray trace result calculated by "my collider center -> opponent's collider center"

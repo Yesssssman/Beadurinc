@@ -34,7 +34,8 @@ public:
 	 * Initialize the player character
 	 * Called on PlayerController starts possessing character
 	 */
-	void InitPlayer(const TObjectPtr<APlayerCharacter> SpawnedPlayer);
+	UFUNCTION(BlueprintImplementableEvent)
+	void InitPlayer(const APlayerCharacter* SpawnedPlayer);
 
 private:
 	/**
@@ -49,12 +50,12 @@ private:
 	 * Called on boss characters perceives the player and removed when the boss
 	 * no more sensing the player.
 	 */
-	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
 	UUserWidget* BossBarLayout;
 
 	/**
 	 * Main player character
 	 */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
 	TObjectPtr<APlayerCharacter> PlayerCharacter;
 };
