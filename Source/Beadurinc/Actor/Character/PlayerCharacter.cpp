@@ -11,6 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"	
 #include "AbilitySystemComponent.h"
+#include "AbilitySystem/GameplayTag/StateGameplayTags.h"
 #include "AncientKingCharacter.h"
 #include "AbilitySystem/AbilityId.h"
 #include "MotionWarpingComponent.h"
@@ -134,6 +135,8 @@ bool APlayerCharacter::IsValidLockOnTarget(const ACharacter* Target) const
 void APlayerCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+	
+	const ULivingAttributeSet* LAS = CastChecked<ULivingAttributeSet>(AbilitySystemComponent->GetAttributeSet(ULivingAttributeSet::StaticClass()));
 	
 	if (bLockingOnCamera)
 	{
@@ -438,12 +441,20 @@ void APlayerCharacter::UpdateCameraLock(float DeltaTime)
 	// Decoupled from camera rotation since actor eye position is different from camera position
 	// Calculates in the same way, using (target - eye).Rotation()
 	FRotator DesiredActorRot = (LockingOnCharacter->GetActorLocation() - GetActorLocation()).Rotation();
-	FRotator CurrentActorRot = GetActorRotation();
-	FRotator NewActorRot = FMath::RInterpTo(CurrentActorRot, DesiredActorRot, DeltaTime, 8.f);
-	
-	// Won't rotate in pitch
-	NewActorRot.Pitch = CurrentActorRot.Pitch;
-	SetActorRotation(NewActorRot);
+
+	// Skip actor rotation when suppressed (e.g. during a roll so direction is set by WASD input)
+	const bool bSuppressActorRotation = AbilitySystemComponent &&
+		AbilitySystemComponent->HasMatchingGameplayTag(StateGameplayTags::State_LockOnRotationSuppressed);
+
+	if (!bSuppressActorRotation)
+	{
+		FRotator CurrentActorRot = GetActorRotation();
+		FRotator NewActorRot = FMath::RInterpTo(CurrentActorRot, DesiredActorRot, DeltaTime, 8.f);
+
+		// Won't rotate in pitch
+		NewActorRot.Pitch = CurrentActorRot.Pitch;
+		SetActorRotation(NewActorRot);
+	}
 	
 	// Calculate world location of camera initial point
 	// Reused 'DesiredActorRot' instead of 'GetActorRot()' so it's not affected by ongoing interpolation

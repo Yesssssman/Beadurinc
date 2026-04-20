@@ -110,6 +110,17 @@ void UHitReactGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	{
 		// Notify the attack has parried to attacker
 		Attacker->NotifyParried();
+		
+		// Reflect stamina damage when parried
+		FGameplayEffectContextHandle GEContext = Attacker->GetAbilitySystemComponent()->MakeEffectContext();
+		FGameplayEffectSpecHandle SpecHandle = OwnerACS->MakeOutgoingSpec(UGE_StaminaDamage::StaticClass(), 1.0F,GEContext);
+		
+		if (SpecHandle.IsValid())
+		{
+			// Apply x0.15 stamina deflation when parried
+			SpecHandle.Data.Get()->SetSetByCallerMagnitude(DataTags::DataTag_Stamina, -OwnerCharacter->GetWeaponActor()->GetStaminaDamage() * 0.15F);
+			Attacker->GetAbilitySystemComponent()->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		}
 	}
 	
 	// Makes the actor look at the attacker
@@ -118,6 +129,9 @@ void UHitReactGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	FRotator RotatorLookAtAttacker = FRotator(0.0F, TowardAttacker.Rotation().Yaw, 0.0F);
 	
 	OwnerCharacter->SetActorRotation(RotatorLookAtAttacker);
+	
+	// Apply stamina gen cooldown
+	OwnerCharacter->ApplyStaminaRegenCooldown();
 	
 	// End ability as soon as triggered
 	EndAbility(Handle, ActorInfo, ActivationInfo, false, false);

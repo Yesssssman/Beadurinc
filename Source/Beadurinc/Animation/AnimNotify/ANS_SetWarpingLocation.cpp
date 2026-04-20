@@ -34,7 +34,10 @@ void UANS_SetWarpingLocation::NotifyTick(USkeletalMeshComponent* MeshComp, UAnim
 	double WarpDistance = FMath::Max(Length - Distance, 0.001F);
 	
 	// Apply the distance to the (owner -> target) vector
-	ToTarget *= WarpDistance / Length;
+	ToTarget *= (WarpDistance / Length);
+	
+	DrawDebugSphere(Owner->GetWorld(), Owner->GetActorLocation() + ToTarget, 
+		16, 16, FColor::Green, false, -1, 0, 2.0F);
 	
 	MotionWarpingTarget.Location = Owner->GetActorLocation() + ToTarget;
 	MotionWarpingTarget.Name = TEXT("AttackTarget");

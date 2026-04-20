@@ -56,6 +56,17 @@ void ULivingAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute
 	}
 }
 
+void ULivingAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
+{
+	Super::PreAttributeBaseChange(Attribute, NewValue);
+	
+	if (const FGameplayAttribute* MaxAttribute = MaxValues.Find(Attribute))
+	{
+		// Clamp the newly received value
+		NewValue = FMath::Clamp(NewValue, 0.0F, MaxAttribute->GetNumericValue(this));
+	}
+}
+
 void ULivingAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	// Trigger any event..

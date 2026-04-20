@@ -174,8 +174,3 @@ GameplayEvent를 호출만 하면 HitReact를 발동시킬 수 있으므로 코�
 *결과*
 
 ![HitReactDemo](img/HitReactDemo.gif)
-
-___
-
-## 플레이어 HitReact
-

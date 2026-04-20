@@ -78,6 +78,10 @@ RPC를 클라이언트로 설정하였으므로 자동으로 `PlayerController`�
 
 *결과*
 
+서버-클라이언트 연결을 테스트해야하므로 Play As Client에 체크하였다
+
+![NetModeClient](img/NetModeClient.png)
+
 ![BossOverlay](img/BossOverlay.gif)
 
 몬스터가 플레이어를 감지하면 화면 상단에 HealthBar가 나타나며 플레이어가 멀어져서 더이상 몬스터가 플레이어를 감지하지 않으면

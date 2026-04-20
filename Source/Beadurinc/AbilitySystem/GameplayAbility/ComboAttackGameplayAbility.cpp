@@ -88,6 +88,12 @@ void UComboAttackGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHand
 	TargetTags.AddTag(AbilityTags::Ability_BlockParry);
 	OwnerACS->CancelAbilities(&TargetTags);
 	OwnerACS->AddLooseGameplayTag(StateGameplayTags::State_BlockingLocked);
+	
+	// Apply stamina gen cooldown
+	if (AFighterCharacter* FighterCharacter = Cast<AFighterCharacter>(ActorInfo->AvatarActor.Get()))
+	{
+		FighterCharacter->ApplyStaminaRegenCooldown();
+	}
 }
 
 /**

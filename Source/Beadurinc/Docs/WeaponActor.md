@@ -21,4 +21,3 @@
 통과하며 떨어지는 것을 방지하기 위해서이다. 
 
 ![WeaponActorCollisionSetup](img/WeaponActorCollisionSetup.png)
-

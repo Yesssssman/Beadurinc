@@ -23,9 +23,4 @@ void UMeleeTraceAnimationNotify::NotifyEnd(USkeletalMeshComponent* MeshComp, UAn
 	// Deactivate collision check when contacting phase ends
 	FighterCharacter->ResetMeleeSwing();
 	FighterCharacter->GetWeaponActor()->SetActorEnableCollision(false);
-	
-	if (!FighterCharacter->GetAbilitySystemComponent()->HasMatchingGameplayTag(StateGameplayTags::State_Parried)) return;
-	
-	// Clear parry tag if exists
-	FighterCharacter->GetAbilitySystemComponent()->RemoveLooseGameplayTag(StateGameplayTags::State_Parried);
 }

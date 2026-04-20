@@ -67,6 +67,10 @@ public:
 	/** Returns Motion Warping manager */
 	FORCEINLINE virtual UMotionWarpingComponent* GetMotionWarpingComponent() const { return MotionWarpingComponent; };
 
+	/** Apply stamina regen block after specific behaviors, like attack, block, hit */
+	UFUNCTION(BlueprintCallable)
+	void ApplyStaminaRegenCooldown();
+	
 private:
 
 	/** Spawn a weapon actor to skeletal mesh socket if `WeaponActorBlueprint` is valid */
@@ -87,6 +91,10 @@ protected:
 	/** Gameplay Effect class for Regenerate stamina */
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
 	TSubclassOf<UGameplayEffect> StaminaRegenEffect;
+	
+	/** Gameplay Effect class for Blocking stamina regen temporarily */
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
+	TSubclassOf<UGameplayEffect> StaminaRegenBlockEffect;
 	
 	/** Motion warping component to track target actor precisely while playing attack animations */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")

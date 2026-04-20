@@ -19,9 +19,12 @@ public:
 	/** Constructor */
 	ULivingAttributeSet();
 	
-	/** Called before any change is applied to attribute value */
+	/** Called before any change is applied to attribute value. That change is transient until GE ends */
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
-
+	
+	/** Called before any change is applied to attribute base value */
+	virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
+	
 	/** Called after attribute value change is confirmed */
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 

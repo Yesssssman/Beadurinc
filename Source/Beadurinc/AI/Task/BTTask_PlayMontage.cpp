@@ -31,19 +31,18 @@ EBTNodeResult::Type UBTTask_PlayMontage::ExecuteTask(UBehaviorTreeComponent& Own
 		return EBTNodeResult::Failed;
 	}
 	
-	// Get Anim Instance to use delegate for montage finishes
-	if (AICharacter->PlayAnimMontage(AnimMontage) > 0.0F)
-	{
-		// Used delegate pattern for the montage finish
-		FOnMontageEnded MontageEndDelegate;
-		MontageEndDelegate.BindUObject(this, &UBTTask_PlayMontage::OnMontageFinished, &OwnerComp);
-		// Give delegate and montage object, finishes of AnimMontage will call the delegate
-		AnimInstance->Montage_SetBlendingOutDelegate(MontageEndDelegate, AnimMontage);
-		
-		AICharacter->GetAbilitySystemComponent()->AddLooseGameplayTags(FinishConditionStates);
-		
-		return EBTNodeResult::InProgress;
-	}
+	// Play montage (unsafe)
+	PlayMontageMulticast(AICharacter, AnimMontage);
+	
+	// Used delegate pattern for the montage finish
+	FOnMontageEnded MontageEndDelegate;
+	MontageEndDelegate.BindUObject(this, &UBTTask_PlayMontage::OnMontageFinished, &OwnerComp);
+	// Give delegate and montage object, finishes of AnimMontage will call the delegate
+	AnimInstance->Montage_SetBlendingOutDelegate(MontageEndDelegate, AnimMontage);
+	
+	AICharacter->GetAbilitySystemComponent()->AddLooseGameplayTags(FinishConditionStates);
+	
+	return EBTNodeResult::InProgress;
 	
 	// For 0 length montages return succeeded right away
 	return EBTNodeResult::Succeeded;
@@ -67,12 +66,20 @@ void UBTTask_PlayMontage::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* Nod
 }
 
 /** Latent task for montage finishes */
-void UBTTask_PlayMontage::OnMontageFinished(UAnimMontage* Montage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp) const
+void UBTTask_PlayMontage::OnMontageFinished(UAnimMontage* MontageIn, bool bInterrupted, UBehaviorTreeComponent* OwnerComp) const
 {
 	// Prevents the node being success if the montage is interrupted by another way
 	if (OwnerComp && OwnerComp->GetActiveNode() == this)
 	{
 		// Tells BT to continue to the next node
 		FinishLatentTask(*OwnerComp, bInterrupted ? EBTNodeResult::Failed : EBTNodeResult::Succeeded);
+	}
+}
+
+void UBTTask_PlayMontage::PlayMontageMulticast_Implementation(ACharacter* CharacterIn, UAnimMontage* MontageIn)
+{
+	if (CharacterIn->GetMesh() && CharacterIn->GetMesh()->GetAnimInstance())
+	{
+		CharacterIn->PlayAnimMontage(MontageIn);
 	}
 }

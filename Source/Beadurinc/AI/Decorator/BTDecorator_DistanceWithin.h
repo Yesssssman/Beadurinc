@@ -26,7 +26,11 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Condition", meta = (AllowPrivateAccess = true))
 	FBlackboardKeySelector TargetActorKey;
 
-	/** The threshold distance to judge if target is within boundary */
+	/** Min distance boundary */
 	UPROPERTY(EditAnywhere, Category = "Condition", meta = (AllowPrivateAccess = true))
-	float Within = 100.0F;
+	float Min;
+	
+	/** Max distance boundary */
+	UPROPERTY(EditAnywhere, Category = "Condition", meta = (AllowPrivateAccess = true))
+	float Max;
 };

@@ -22,19 +22,22 @@ public:
 protected:
 
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-
+	
 	/** Tick this task */
 	virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 	
 	/** Latent task for montage finishes */
-	void OnMontageFinished(UAnimMontage* Montage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp) const;
-
+	void OnMontageFinished(UAnimMontage* MontageIn, bool bInterrupted, UBehaviorTreeComponent* OwnerComp) const;
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void PlayMontageMulticast(ACharacter* CharacterIn, UAnimMontage* MontageIn);
+	
 private:
 	/** Animation Montage to play. Must compatible with the skeleton that BT owner has */
 	UPROPERTY(Category = Node, EditAnywhere)
 	FValueOrBBKey_Object MontageToPlay = TObjectPtr<UAnimMontage>();
 	
-	/** State gameplay tags to finish the task */
+	/** State gameplay tags to finish the task. Until it's removed, the task will remain in *ongoing* */
 	UPROPERTY(Category = Node, EditAnywhere)
 	FGameplayTagContainer FinishConditionStates;
 };

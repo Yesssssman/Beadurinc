@@ -181,3 +181,71 @@ UGE_HealthDamage::UGE_HealthDamage()
 ![AttributeModification](img/AttributeModification.gif)
 
 Attribute를 위젯에 바인딩하는 문서는 [이곳](UI.md)을 참조
+
+___
+
+## 버그발생 & 수정
+
+스태미나 재생을 위한 GameplayEffect를 적용하였을 때, 스태미나가 무한으로 리젠되는 버그를 발견하였다. 이 버그는 `GetStamina()` 값이
+계속해서 Max값을 리턴하고 있었으므로, 무언가 이상하다 느낀 것은 장시간 스태미나가 재생성되면 다음 스킬에서 스태미나 소모가 발생하지
+않았기 때문에 알아챌 수 있었다.
+
+UnrealEngine의 `AttributeSet` 소스코드를 뒤져보던 중 `BaseValue`와 `CurrentValue` 두 개의 변수가 있는 것을 발견하였다. 이
+부분이 의심스러워서 두 값을 모두 출력해 보기로 하였다.
+
+**PlayerCharacter.cpp**
+```c++
+void APlayerCharacter::Tick(float DeltaSeconds)
+{
+    Super::Tick(DeltaSeconds);
+    
+    const ULivingAttributeSet* LAS = CastChecked<ULivingAttributeSet>(AbilitySystemComponent->GetAttributeSet(ULivingAttributeSet::StaticClass()));
+    
+    GEngine->AddOnScreenDebugMessage(-1, 2.0F, FColor::Green, 
+        FString::Printf(
+            TEXT("stamina: %.1f, %.1f"),
+            LAS->GetStaminaAttribute().GetGameplayAttributeData(LAS)->GetBaseValue(),
+            LAS->GetStaminaAttribute().GetGameplayAttributeData(LAS)->GetCurrentValue()
+        )
+    );
+    ...
+}
+```
+
+![StaminaRegenBug.png](img/StaminaRegenBug.png)
+
+CurrentValue의 값은 50으로 설정되있는데 반해 BaseValue의 값은 계속해서 늘어나고 있었다. 이 오류는 앞서 언급한 `PreAttributeChange`
+함수 설정 부분과 관련이 있었다.
+
+언리얼 공식 문서에 따르면 `PreAttributeChange`는 Attribute의 일시적인 값 변경에만 적용된다고 명시되어 있다. 이는 일시적으로
+유지되는 버프 스킬등을 위해 디자인된 것으로 `GameplayEffect` 가 해제되면 Attribute는 BaseValue를 기준으로 다시 CurrentValue를
+계산한다. 하지만 스태미나 재생은 영구적인 것이므로 BaseValue를 수정하기 때문에 Clamp가 적용되지 않고 있던 것이다.
+
+앞서 `PostGameplayEffectExecute`를 사용하지 않기로 결정한 이유는 `GameplayEffect`를 통해 Attribute를 수정해도
+`PreAttributeChange`가 여전히 호출되는 것을 확인했기 때문이다. 하지만 이는 CurrentValue에만 해당하는 것으로 실제로
+`PostGameplayEffectExecute`를 사용하면 BaseValue도 같이 수정할 수 있는 것을 알아내었다. 하지만 여전히 `PreAttributeChange` ->
+`PostGameplayEffectExecute` -> `PreAttributeChange` 이 3중 호출이 불필요하다 느껴졌고, Override할만한 다른 함수가 없는지
+찾아보았다.
+
+`AttributeSet` 소스 코드를 탐색하던 중 `PreAttributeBaseChange`라는 함수를 찾을 수 있었다. 이름에서 알 수 있듯 BaseValue를
+변경하고자 할 때 호출되는 함수이며 정확히 원하는 타이밍에 호출되는 함수였다.
+
+**LivingAttributeSet.cpp**
+```c++
+void ULivingAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
+{
+    Super::PreAttributeBaseChange(Attribute, NewValue);
+    
+    if (const FGameplayAttribute* MaxAttribute = MaxValues.Find(Attribute))
+    {
+        // Clamp the newly received value
+        NewValue = FMath::Clamp(NewValue, 0.0F, MaxAttribute->GetNumericValue(this));
+    }
+}
+```
+
+`PreAttributeChange`와 동일한 로직으로, NewValue가 레퍼런스 인자이기 때문에 새로 정해질 값을 조정 가능하다.
+
+![StaminaRegenBugFix.png](img/StaminaRegenBugFix.png)
+
+수정사항 적용시 CurrentValue와 BaseValue모두 50으로 고정되는 것을 확인할 수 있다.

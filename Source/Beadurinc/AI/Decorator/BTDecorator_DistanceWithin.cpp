@@ -30,7 +30,9 @@ bool UBTDecorator_DistanceWithin::CalculateRawConditionValue(UBehaviorTreeCompon
 	
 	// In case target is null (should be filtered by root node)
 	if (!Target) return false;
-
+	
+	double DistanceSqr = BTOwner->GetSquaredDistanceTo(Target);
+	
 	// Used squared distance to avoid root operation
-	return BTOwner->GetSquaredDistanceTo(Target) <= Within * Within;
+	return DistanceSqr <= Max * Max && Min * Min <= DistanceSqr;
 }

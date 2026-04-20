@@ -33,16 +33,15 @@ void AFighterCharacter::BeginPlay()
 		AbilitySystemComponent->GiveAbility(HitReactSpec);
 		
 		// Add passive GE: stamina regeneration on inactivity
-		if (StaminaRegenEffect)
+		if (StaminaRegenEffect && StaminaRegenBlockEffect)
 		{
 			FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
 			EffectContext.AddSourceObject(this);
-			
 			FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(StaminaRegenEffect, 1.0f, EffectContext);
 
 			if (SpecHandle.IsValid())
 			{
-				//AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+				AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 			}
 		}
 	}
@@ -165,4 +164,20 @@ void AFighterCharacter::HitStopForTime(const float StopTime)
 		StopTime,
 		false
 	);
+}
+
+void AFighterCharacter::ApplyStaminaRegenCooldown()
+{
+	// Apply only when `StaminaRegenEffect` exists
+	if (AbilitySystemComponent && HasAuthority() && StaminaRegenEffect && StaminaRegenBlockEffect)
+	{
+		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+		EffectContext.AddSourceObject(this);
+		FGameplayEffectSpecHandle BlockSpecHandle = AbilitySystemComponent->MakeOutgoingSpec(StaminaRegenBlockEffect, 1.0f, EffectContext);
+
+		if (BlockSpecHandle.IsValid())
+		{
+			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*BlockSpecHandle.Data.Get());
+		}
+	}
 }
