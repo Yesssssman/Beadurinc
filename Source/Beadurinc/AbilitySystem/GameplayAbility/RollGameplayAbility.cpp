@@ -11,9 +11,6 @@ URollGameplayAbility::URollGameplayAbility()
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
 
-/**
- * Checks if the player can do combo attacks
- */
 bool URollGameplayAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, OUT FGameplayTagContainer* OptionalRelevantTags) const
 {
 	if (!IsValid(RollingMontage))
@@ -34,9 +31,6 @@ bool URollGameplayAbility::CanActivateAbility(const FGameplayAbilitySpecHandle H
 	return false;
 }
 
-/**
- * Takes blocking stance
- */
 void URollGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))

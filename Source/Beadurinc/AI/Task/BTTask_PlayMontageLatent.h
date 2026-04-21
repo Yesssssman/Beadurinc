@@ -5,26 +5,21 @@
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
 #include "BehaviorTree/ValueOrBBKey.h"
-#include "BTTask_PlayMontage.generated.h"
+#include "BTTask_PlayMontageLatent.generated.h"
 
-/**
- *
- */
 UCLASS()
-class BEADURINC_API UBTTask_PlayMontage : public UBTTaskNode
+class BEADURINC_API UBTTask_PlayMontageLatent : public UBTTaskNode
 {
 	GENERATED_BODY()
 
 public:
 
-	UBTTask_PlayMontage();
+	/** Constructor */
+	UBTTask_PlayMontageLatent();
 
 protected:
 
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-	
-	/** Tick this task */
-	virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 	
 	/** Latent task for montage finishes */
 	void OnMontageFinished(UAnimMontage* MontageIn, bool bInterrupted, UBehaviorTreeComponent* OwnerComp) const;
@@ -34,10 +29,10 @@ protected:
 	
 private:
 	/** Animation Montage to play. Must compatible with the skeleton that BT owner has */
-	UPROPERTY(Category = Node, EditAnywhere)
+	UPROPERTY(Category = Animation, EditAnywhere)
 	FValueOrBBKey_Object MontageToPlay = TObjectPtr<UAnimMontage>();
 	
-	/** State gameplay tags to finish the task. Until it's removed, the task will remain in *ongoing* */
-	UPROPERTY(Category = Node, EditAnywhere)
-	FGameplayTagContainer FinishConditionStates;
+	/** If set true, the node ends when montage finishes */
+	UPROPERTY(Category = Animation, EditAnywhere)
+	bool StatefulProgress;
 };

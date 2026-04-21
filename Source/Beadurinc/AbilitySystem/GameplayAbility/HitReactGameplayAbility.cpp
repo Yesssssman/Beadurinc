@@ -1,12 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "AbilitySystem/GameplayAbility/HitReactGameplayAbility.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/GameplayTag/StateGameplayTags.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/GameplayEffect/GE_HealthDamage.h"
 #include "AbilitySystem/GameplayEffect/GE_StaminaDamage.h"
 #include "AbilitySystem/GameplayTag/AbilityTags.h"
 #include "AbilitySystem/GameplayTag/DataTags.h"
+#include "AbilitySystem/GameplayTag/GameplayEventTags.h"
 #include "Actor/Character/FighterCharacter.h"
 #include "Animation/Metadata/AttackMetaData.h"
 
@@ -46,19 +49,19 @@ void UHitReactGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 			{
 				if (UAnimMontage* ParryMontage = *OnParry.Find(MetaData->AttackTypeTag))
 				{
-					OwnerCharacter->PlayAnimMontage(ParryMontage);
+					OwnerACS->PlayMontage(this, ActivationInfo, ParryMontage, 1.0F);
 					Parried = true;
 				}
 				else
 				{
 					// Play a default block animation when no parry animation found 
-					if (OnBlock) OwnerCharacter->PlayAnimMontage(OnBlock);
+					if (OnBlock) OwnerACS->PlayMontage(this, ActivationInfo, OnBlock, 1.0F);
 				}
 			}
 		}
 		else
 		{
-			if (OnBlock) OwnerCharacter->PlayAnimMontage(OnBlock);
+			if (OnBlock) OwnerACS->PlayMontage(this, ActivationInfo, OnBlock, 1.0F);
 		}
 		
 		// Plays gameplay cue for block
@@ -78,6 +81,15 @@ void UHitReactGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 			// Apply x0.15 stamina deflation when parried
 			SpecHandle.Data.Get()->SetSetByCallerMagnitude(DataTags::DataTag_Stamina, -Attacker->GetWeaponActor()->GetStaminaDamage() * (Parried ? 0.15F : 1.0F));
 			OwnerACS->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			
+			if (const ULivingAttributeSet* LivingAttributes = Cast<ULivingAttributeSet>(OwnerACS->GetAttributeSet(ULivingAttributeSet::StaticClass())))
+			{
+				// Plays a stagger animation caused by no stamina if the owner hasn't parried the incomed attack
+				if (!Parried && Stagger && LivingAttributes->GetStamina() <= 0.0F)
+				{
+					OwnerACS->PlayMontage(this, ActivationInfo, Stagger, 1.0F);
+				}
+			}
 		}
 	}
 	else
@@ -92,13 +104,30 @@ void UHitReactGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 		GEContext.AddInstigator(Attacker, Attacker);
 		GEContext.AddSourceObject(Attacker->GetWeaponActor());
 		
-		// Create GE spec handler to apply damage
-		FGameplayEffectSpecHandle SpecHandle = OwnerACS->MakeOutgoingSpec(UGE_HealthDamage::StaticClass(), 1.0F,GEContext);
+		// Create GE spec handler to apply stamina & health damage
+		FGameplayEffectSpecHandle SpecHandleHealth = OwnerACS->MakeOutgoingSpec(UGE_HealthDamage::StaticClass(), 1.0F, GEContext);
+		FGameplayEffectSpecHandle SpecHandleStamina = OwnerACS->MakeOutgoingSpec(UGE_StaminaDamage::StaticClass(), 1.0F, GEContext);
 		
-		if (SpecHandle.IsValid())
+		if (SpecHandleHealth.IsValid())
 		{
-			SpecHandle.Data.Get()->SetSetByCallerMagnitude(DataTags::DataTag_Health, -Attacker->GetWeaponActor()->GetHealthDamage());
-			OwnerACS->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			SpecHandleHealth.Data.Get()->SetSetByCallerMagnitude(DataTags::DataTag_Health, -Attacker->GetWeaponActor()->GetHealthDamage());
+			OwnerACS->ApplyGameplayEffectSpecToSelf(*SpecHandleHealth.Data.Get());
+		}
+		
+		if (SpecHandleStamina.IsValid())
+		{
+			SpecHandleStamina.Data.Get()->SetSetByCallerMagnitude(DataTags::DataTag_Stamina, -Attacker->GetWeaponActor()->GetStaminaDamage() * StaminaDamageAttenuation);
+			OwnerACS->ApplyGameplayEffectSpecToSelf(*SpecHandleStamina.Data.Get());
+			
+			if (const ULivingAttributeSet* LivingAttributes = Cast<ULivingAttributeSet>(OwnerACS->GetAttributeSet(ULivingAttributeSet::StaticClass())))
+			{
+				// Plays a stagger animation caused by no stamina if the owner hasn't parried the incomed attack
+				if (StaggerOnHealthDamage && Stagger && LivingAttributes->GetStamina() <= 0.0F)
+				{
+					OwnerACS->PlayMontage(this, ActivationInfo, Stagger, 1.0F);
+					OwnerACS->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Stagger")), CueParams);
+				}
+			}
 		}
 	}
 	
@@ -106,21 +135,21 @@ void UHitReactGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	Attacker->AddHitActor(OwnerCharacter);
 	Attacker->HitStopForTime(HitStop);
 	
+	// Payback the stamina damage when succeeded at parrying
 	if (Parried && Attacker->GetAbilitySystemComponent())
 	{
-		// Notify the attack has parried to attacker
-		Attacker->NotifyParried();
+		// Activate parry react ability in opponent
+		FGameplayEventData EventContext;
 		
-		// Reflect stamina damage when parried
-		FGameplayEffectContextHandle GEContext = Attacker->GetAbilitySystemComponent()->MakeEffectContext();
-		FGameplayEffectSpecHandle SpecHandle = OwnerACS->MakeOutgoingSpec(UGE_StaminaDamage::StaticClass(), 1.0F,GEContext);
+		// Fill common parameters
+		EventContext.Instigator = OwnerCharacter;
+		EventContext.OptionalObject = OwnerCharacter->GetWeaponActor();
+		EventContext.Target = Attacker;
 		
-		if (SpecHandle.IsValid())
-		{
-			// Apply x0.15 stamina deflation when parried
-			SpecHandle.Data.Get()->SetSetByCallerMagnitude(DataTags::DataTag_Stamina, -OwnerCharacter->GetWeaponActor()->GetStaminaDamage() * 0.15F);
-			Attacker->GetAbilitySystemComponent()->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-		}
+		// Parry damage formular = (attacker stamina damage + owner stamina damage) / 4
+		EventContext.EventMagnitude = -(OwnerCharacter->GetWeaponActor()->GetStaminaDamage() + Attacker->GetWeaponActor()->GetStaminaDamage()) * 0.25F;
+		
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Attacker, GameplayEventTags::Event_Combat_Parried, EventContext);
 	}
 	
 	// Makes the actor look at the attacker

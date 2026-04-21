@@ -15,6 +15,7 @@ public:
 	URollGameplayAbility();
 
 protected:
+	
 	/**
 	 * Checks if the player can do combo attacks
 	 */
@@ -32,6 +33,7 @@ private:
 	void MontageEnds();
 
 private:
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Animations, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimMontage> RollingMontage;
 };

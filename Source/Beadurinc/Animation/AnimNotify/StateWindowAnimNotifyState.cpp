@@ -1,9 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Animation/AnimNotify/StateWindowAnimNotifyState.h"
 #include "AbilitySystemComponent.h"
-#include "Actor/Character/AncientKingCharacter.h"
-#include "Actor/Character/PlayerCharacter.h"
+#include "Actor/Character/FighterCharacter.h"
+#include "Animation/AnimNotify/StateWindowAnimNotifyState.h"
 
 void UStateWindowAnimNotifyState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {

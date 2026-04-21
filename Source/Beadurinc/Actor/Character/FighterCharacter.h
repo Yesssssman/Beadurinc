@@ -49,9 +49,6 @@ public:
 	/** Apply Hit Stop on melee strike */
 	void HitStopForTime(const float StopTime);
 
-	/** Play a short parrying stun */
-	void NotifyParried();
-	
 	/** Returns a current attacking target. Determined by camera lock for players, by AI perception for monsters. */
 	virtual TObjectPtr<ACharacter> GetAttackTarget() PURE_VIRTUAL(AFighterCharacter::GetAttackTarget, return nullptr; );
 
@@ -87,6 +84,10 @@ protected:
 	/** Gameplay Ability class for Hit React */
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
 	TSubclassOf<UGameplayAbility> HitReactAbility;
+	
+	/** Gameplay Ability class for Parry React */
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
+	TSubclassOf<UGameplayAbility> ParryReactAbility;
 	
 	/** Gameplay Effect class for Regenerate stamina */
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")

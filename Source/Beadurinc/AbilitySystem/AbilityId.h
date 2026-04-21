@@ -6,4 +6,5 @@ enum class EAbilityId : int32
 	Block = 2,
 	Roll = 3,
 	Hit_React = 4,
+	Parry_React = 5,
 };
