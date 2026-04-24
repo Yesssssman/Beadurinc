@@ -1,9 +1,6 @@
 #include "MeleeTraceAnimationNotify.h"
-
-#include "AbilitySystem/GameplayTag/StateGameplayTags.h"
 #include "Actor/WeaponActor.h"
 #include "Actor/Character/FighterCharacter.h"
-#include "AbilitySystemComponent.h"
 
 void UMeleeTraceAnimationNotify::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {

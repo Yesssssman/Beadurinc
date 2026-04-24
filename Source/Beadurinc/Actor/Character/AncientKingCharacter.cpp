@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "AncientKingCharacter.h"
 #include "AbilitySystemComponent.h"
 #include "AIController.h"

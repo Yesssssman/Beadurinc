@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "RollGameplayAbility.h"
 #include "Actor/Character/PlayerCharacter.h"
 #include "AbilitySystemComponent.h"

@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "AbilitySystemComponent.h"
 #include "Actor/Character/FighterCharacter.h"
 #include "Animation/AnimNotify/StateWindowAnimNotifyState.h"

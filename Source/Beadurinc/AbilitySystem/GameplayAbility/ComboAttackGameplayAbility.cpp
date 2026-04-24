@@ -1,8 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "AbilitySystem/GameplayAbility/ComboAttackGameplayAbility.h"
-
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Actor/Character/PlayerCharacter.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
@@ -40,16 +36,16 @@ void UComboAttackGameplayAbility::PlayNextComboAttack()
 		}
 		
 		// Triggers by play montage ability task (activates until montage ends)
-		UAbilityTask_PlayMontageAndWait* AT = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+		UAbilityTask_PlayMontageAndWait* AbilityTaskPlayMontage = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 			this,
 			TEXT("ComboAttack"),
 			BCharacter->GetWeaponActor()->GetComboAttackAt(ComboCounter)
 		);
 		
-		AT->OnCompleted.AddDynamic(this, &UComboAttackGameplayAbility::OnMontageCompleted);
-		AT->OnInterrupted.AddDynamic(this, &UComboAttackGameplayAbility::OnMontageInterrupted);
-		AT->ReadyForActivation();
-		LastComboMontagePlayTask = AT;
+		AbilityTaskPlayMontage->OnCompleted.AddDynamic(this, &UComboAttackGameplayAbility::OnMontageCompleted);
+		AbilityTaskPlayMontage->OnInterrupted.AddDynamic(this, &UComboAttackGameplayAbility::OnMontageInterrupted);
+		AbilityTaskPlayMontage->ReadyForActivation();
+		LastComboMontagePlayTask = AbilityTaskPlayMontage;
 		
 		// Clamp combo counter to combo montage array length
 		ComboCounter = (ComboCounter + 1) % BCharacter->GetWeaponActor()->GetComboSequenceLength();

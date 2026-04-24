@@ -1,7 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "AbilitySystem/GameplayAbility/HitReactGameplayAbility.h"
-
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/GameplayTag/StateGameplayTags.h"
 #include "AbilitySystemComponent.h"

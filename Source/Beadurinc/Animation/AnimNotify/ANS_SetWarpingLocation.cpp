@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Animation/AnimNotify/ANS_SetWarpingLocation.h"
 
 #include "RootMotionModifier.h"
