@@ -22,10 +22,9 @@ public class Beadurinc : ModuleRules
 			"GameplayAbilities",
 			"GameplayTasks",
 			"GameplayTags",
-			"MotionWarping"
+			"MotionWarping",
+			"ContextualAnimation"
 		});
-
-		PrivateDependencyModuleNames.AddRange(new string[] { });
 
 		PublicIncludePaths.AddRange(new string[] {
 			"Beadurinc"

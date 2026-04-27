@@ -2,9 +2,10 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
-#include "AbilitySystem/GameplayTag/GameplayEventTags.h"
-#include "Components/CapsuleComponent.h"
+#include "ContextualAnimSceneActorComponent.h"
 #include "MotionWarpingComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "AbilitySystem/GameplayTag/GameplayEventTags.h"
 #include "AbilitySystem/AbilityId.h"
 #include "AbilitySystem/GameplayAbility/HitReactGameplayAbility.h"
 #include "AbilitySystem/GameplayTag/StateGameplayTags.h"
@@ -12,8 +13,11 @@
 
 AFighterCharacter::AFighterCharacter()
 {
-	// Create Motion Wraping component
+	// Create Motion Warping component
 	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
+	
+	// Create Contextual Anim Scene Actor component
+	ContextualAnimSceneActorComponent = CreateDefaultSubobject<UContextualAnimSceneActorComponent>(TEXT("ContextualAnimSceneActorComponent"));
 }
 
 void AFighterCharacter::BeginPlay()

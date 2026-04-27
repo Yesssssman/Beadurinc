@@ -8,6 +8,7 @@
 #include "AbilitySystem/AttributeSet/LivingAttributeSet.h"
 #include "FighterCharacter.generated.h"
 
+class UContextualAnimSceneActorComponent;
 class UGameplayAbility;
 class UAbilitySystemComponent;
 class UAttributeSet;
@@ -61,8 +62,11 @@ public:
 	/** Returns Ability Component object **/
 	FORCEINLINE virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override { return AbilitySystemComponent; };
 
-	/** Returns Motion Warping manager */
+	/** Returns Motion Warping component */
 	FORCEINLINE virtual UMotionWarpingComponent* GetMotionWarpingComponent() const { return MotionWarpingComponent; };
+	
+	/** Returns Contextual Anim Scene Actor component */
+	FORCEINLINE virtual UContextualAnimSceneActorComponent* GetContextualAnimSceneActorComponent() const { return ContextualAnimSceneActorComponent; };
 
 	/** Apply stamina regen block after specific behaviors, like attack, block, hit */
 	UFUNCTION(BlueprintCallable)
@@ -101,6 +105,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;
 
+	/** To play Contextual Anim Scenes */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	TObjectPtr<UContextualAnimSceneActorComponent> ContextualAnimSceneActorComponent;
+	
 	/** Gameplay Ability System Component */
 	UPROPERTY()
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;

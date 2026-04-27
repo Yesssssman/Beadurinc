@@ -57,16 +57,24 @@ bool UComboAttackGameplayAbility::CanActivateAbility(const FGameplayAbilitySpecH
 {
 	if (!Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags)) return false;
 	
-	if (APlayerCharacter* AbilityOwner = Cast<APlayerCharacter>(ActorInfo->AvatarActor.Get()))
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(ActorInfo->AvatarActor.Get());
+	if (!OwnerCharacter) return false;
+	
+	// The case that the current attack target is executable. Instead of playing combo, it plays CAS finisher animation by `ExecutionGameplayAbility`. 
+	if (OwnerCharacter->GetAttackTarget())
 	{
-		if (const UAbilitySystemComponent* ASC = AbilityOwner->GetAbilitySystemComponent())
+		AFighterCharacter* TargetCharacter = Cast<AFighterCharacter>(OwnerCharacter->GetAttackTarget());
+		if (!TargetCharacter) return false;
+		
+		// Check GAS tag
+		if (TargetCharacter->GetAbilitySystemComponent()->HasMatchingGameplayTag(StateGameplayTags::State_VulnerableToExecution))
 		{
-			// If State_ComboLocked exists, ability is not available
-			return !ASC->HasMatchingGameplayTag(StateGameplayTags::State_ComboLocked);
+			return false;
 		}
 	}
 	
-	return false;
+	// If State_ComboLocked exists, ability is not available
+	return !ActorInfo->AbilitySystemComponent->HasMatchingGameplayTag(StateGameplayTags::State_ComboLocked);
 }
 
 /// Called on the ability being activated

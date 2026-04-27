@@ -42,6 +42,13 @@ void ABeadurincPlayerState::BeginPlay()
 			AbilitySystemComponent->GiveAbility(RollAbilitySpec);
 		}
 		
+		// Give execution ability
+		if (ExecutionAbility)
+		{
+			FGameplayAbilitySpec ExecutionAbilitySpec(ExecutionAbility, 1, static_cast<int32>(EAbilityId::Execution), this);
+			AbilitySystemComponent->GiveAbility(ExecutionAbilitySpec);
+		}
+		
 		if (AttributeSetClass)
 		{
 			// Create AttributeSet

@@ -11,4 +11,5 @@ namespace StateGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT( State_StaminaRegenCooldown,		"State.StaminaRegenCooldown",		"A state that stamina regeneration is blocked"			);
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT( State_LockOnRotationSuppressed,	"State.LockOnRotationSuppressed",	"A state where the actor should not rotate to face the lock-on target"	);
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT( State_HoldComboSequence,		"State.HoldComboSequence",			"A state that keeps combo counter (both for player & AI)"				);
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT( State_VulnerableToExecution,	"State.VulnerableToExecution",		"A state that allows to be executed by finisher moves"					);
 }

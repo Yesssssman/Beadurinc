@@ -79,9 +79,6 @@ protected:
 	/** On released GAS ability input key */
 	void ReleaseAbility(int32 InputId);
 
-	/** Get a current attack target (Locked-on target by camera) */
-	FORCEINLINE virtual TObjectPtr<ACharacter> GetAttackTarget() override { return LockingOnCharacter; }
-
 public:
 
 	/** Handles move inputs from either controls or UI interfaces */
@@ -112,6 +109,9 @@ public:
 	/** Checks if any buffered input exist */
 	virtual bool HasBufferedInput();
 
+	/** Get a current attack target (Locked-on target by camera) */
+	FORCEINLINE virtual TObjectPtr<ACharacter> GetAttackTarget() override { return LockingOnCharacter; }
+	
 public:
 
 	/** Returns CameraBoom subobject **/

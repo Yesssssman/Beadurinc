@@ -69,6 +69,10 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
 	TSubclassOf<UGameplayAbility> RollAbility;
 
+	/** Gameplay Ability class for a vulnerable target execution */
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
+	TSubclassOf<UGameplayAbility> ExecutionAbility;
+	
 	/** Data Table for initializing AttributeSet data */
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
 	TObjectPtr<UDataTable> InitialStatsTable;

@@ -25,6 +25,7 @@ void UParryReactGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandl
 	{
 		SpecHandle.Data.Get()->SetSetByCallerMagnitude(DataTags::DataTag_Stamina, TriggerEventData->EventMagnitude);
 		ActorInfo->AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		FighterCharacter->ApplyStaminaRegenCooldown();
 	}
 	
 	if (const ULivingAttributeSet* LivingAttributes = Cast<ULivingAttributeSet>(ActorInfo->AbilitySystemComponent->GetAttributeSet(ULivingAttributeSet::StaticClass())))
