@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "GameFramework/PlayerController.h"
 #include "BeadurincPlayerController.generated.h"
 
@@ -52,6 +53,17 @@ protected:
 	/** Returns true if the player should use UMG touch controls */
 	bool ShouldUseTouchControls() const;
 
+public:
+	
+	/**
+	 * Display a warning widget on the top of the player, that indicates an incoming critical
+	 * attacks (pierce, low attack)
+	 * 
+	 * @param AttackType
+	 */
+	UFUNCTION(Client, Reliable, BlueprintCallable)
+	void AlertCriticalAttacks(const FGameplayTag& AttackType);
+	
 protected:
 
 	/** Input Mapping Contexts */

@@ -13,28 +13,35 @@ class BEADURINC_API ABeadurincHUD : public AHUD
 	GENERATED_BODY()
 
 public:
-
+	
 	/**
 	 * Adds a boss stat bar to widget
 	 * @param BossActor A boss character that will bound to widget
 	 */
 	UFUNCTION(BlueprintImplementableEvent)
 	void AddBossEntry(const AFighterCharacter* BossActor);
-
+	
 	/**
 	 * Removes a boss stat bar from widget
 	 * @param BossActor A boss character who will be removed from boss bars
 	 */
 	UFUNCTION(BlueprintImplementableEvent)
 	void RemoveBossEntry(const AFighterCharacter* BossActor);
-
+	
+	/**
+	 * Shows up a critical attack indicator
+	 * @param AttackTypeTag Attack type
+	 */
+	UFUNCTION(BlueprintImplementableEvent)
+	void AlertCriticalAttack(const FGameplayTag AttackTypeTag);
+	
 	/**
 	 * Initialize the player character
 	 * Called on PlayerController starts possessing character
 	 */
 	UFUNCTION(BlueprintImplementableEvent)
 	void InitPlayer(const APlayerCharacter* SpawnedPlayer);
-
+	
 private:
 	/**
 	 * A target indicator when player activates Camera Lock-on feature

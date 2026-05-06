@@ -11,6 +11,7 @@
 // fired when the player becomes available state.
 #define BUFFER_WINDOW_SECONDS 0.25
 
+class UWidgetComponent;
 class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
@@ -97,6 +98,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
 
+	/** Handle notify from nearby attacker's danger attacks (unblockable, like pierce and low attacks) */
+	UFUNCTION(BlueprintImplementableEvent, Category="HUD")
+	void AlertDangerAttacks(const FGameplayTag& AttackType);
+
 	/** Buffer an ability input by InputID */
 	virtual void BufferInput(int32 InputID);
 
@@ -137,6 +142,10 @@ private:
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
+
+	/** A widget component to indicate incoming danager attacks */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UWidgetComponent* WidgetComp;
 
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, Category="Input")

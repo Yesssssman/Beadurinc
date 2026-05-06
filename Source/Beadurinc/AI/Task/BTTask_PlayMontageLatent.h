@@ -5,6 +5,12 @@
 #include "BehaviorTree/ValueOrBBKey.h"
 #include "BTTask_PlayMontageLatent.generated.h"
 
+/**
+ * A unit for attack moves of monster, do multiple tasks.
+ * 
+ * Plays an anim montage
+ * Alerts to a targeted player
+ */
 UCLASS()
 class BEADURINC_API UBTTask_PlayMontageLatent : public UBTTaskNode
 {
@@ -33,4 +39,6 @@ private:
 	/** If set true, the node ends when montage finishes */
 	UPROPERTY(Category = Animation, EditAnywhere)
 	bool StatefulProgress;
+	
+	static const FGameplayTagContainer DangerAttackTypes;
 };

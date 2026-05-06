@@ -7,4 +7,6 @@ namespace AttackTypeTags
 	/** GameplayTag definition macro */
 	BEADURINC_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(AttackType_LeftSwing);
 	BEADURINC_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(AttackType_RightSwing);
+	BEADURINC_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(AttackType_Pierce);
+	BEADURINC_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(AttackType_LowAttack);
 }

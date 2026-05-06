@@ -13,6 +13,7 @@
 #include "AncientKingCharacter.h"
 #include "AbilitySystem/AbilityId.h"
 #include "MotionWarpingComponent.h"
+#include "Components/WidgetComponent.h"
 #include "GameData/BeadurincPlayerState.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -51,6 +52,12 @@ APlayerCharacter::APlayerCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 	LockOnDistance = 2000.0;
+	
+	WidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("WidgetComp"));
+	WidgetComp->SetupAttachment(GetCapsuleComponent());
+	WidgetComp->SetWidgetSpace(EWidgetSpace::World);
+	WidgetComp->SetBlendMode(EWidgetBlendMode::Transparent);
+	WidgetComp->SetDrawAtDesiredSize(true);
 	
 	bLockingOnCamera = false;
 }

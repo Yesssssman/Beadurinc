@@ -1,8 +1,16 @@
 #include "AI/Task/BTTask_PlayMontageLatent.h"
 
 #include "AIController.h"
+#include "AbilitySystem/GameplayTag/AttackTypeTags.h"
 #include "Actor/Character/FighterCharacter.h"
+#include "Animation/Metadata/AttackMetaData.h"
+#include "EnhancedInput/BeadurincPlayerController.h"
 #include "GameFramework/Character.h"
+
+
+const FGameplayTagContainer UBTTask_PlayMontageLatent::DangerAttackTypes = FGameplayTagContainer::CreateFromArray(
+	TArray<FGameplayTag>({ AttackTypeTags::AttackType_Pierce, AttackTypeTags::AttackType_LowAttack })
+);
 
 UBTTask_PlayMontageLatent::UBTTask_PlayMontageLatent()
 {
@@ -30,8 +38,29 @@ EBTNodeResult::Type UBTTask_PlayMontageLatent::ExecuteTask(UBehaviorTreeComponen
 		// Delegate for montage finish
 		FOnMontageEnded MontageEndDelegate;
 		MontageEndDelegate.BindUObject(this, &UBTTask_PlayMontageLatent::OnMontageFinished, &OwnerComp);
+		
 		// Give delegate and montage object, finishes of AnimMontage will call the delegate
 		AnimInstance->Montage_SetBlendingOutDelegate(MontageEndDelegate, AnimMontage);
+	}
+	
+	// If found any "critical" type like pierce or low attacks, alert to the target if it's a player.
+	if (AICharacter->GetAttackTarget())
+	{
+		if (ABeadurincPlayerController* PlayerController = Cast<ABeadurincPlayerController>(AICharacter->GetAttackTarget()->GetController()))
+		{
+			// Examine metadata and find attack type
+			for (UAnimMetaData* ComboMetaData : AnimMontage->GetMetaData())
+			{
+				if (UAttackMetaData* AttackAnimMetaData = Cast<UAttackMetaData>(ComboMetaData))
+				{
+					if (DangerAttackTypes.HasTag(AttackAnimMetaData->AttackTypeTag))
+					{
+						PlayerController->AlertCriticalAttacks(AttackAnimMetaData->AttackTypeTag);
+						break;
+					}
+				}
+			}
+		}
 	}
 	
 	return StatefulProgress ? EBTNodeResult::InProgress : EBTNodeResult::Succeeded;

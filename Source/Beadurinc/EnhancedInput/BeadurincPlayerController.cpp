@@ -9,7 +9,6 @@
 #include "Widget/BeadurincHUD.h"
 #include "Widgets/Input/SVirtualJoystick.h"
 
-/** Plays a UI sound via RPC (Should be suffixed by `_Implementation` to follow RPC's convention) */
 void ABeadurincPlayerController::PlayLocalSound_Implementation(USoundBase* SoundToPlay, const float VolumeModifier)
 {
 	if (SoundToPlay)
@@ -18,10 +17,6 @@ void ABeadurincPlayerController::PlayLocalSound_Implementation(USoundBase* Sound
 	}
 }
 
-/**
- * Adds a boss stat bar (Should be suffixed by `_Implementation` to follow RPC's convention)
- * @param DisplayedBoss A boss character that will bound to widget
- */
 void ABeadurincPlayerController::DisplayBossBar_Implementation(const AFighterCharacter* DisplayedBoss)
 {
 	if (ABeadurincHUD* BeadurincHUD = Cast<ABeadurincHUD>(GetHUD()))
@@ -30,15 +25,19 @@ void ABeadurincPlayerController::DisplayBossBar_Implementation(const AFighterCha
 	}
 }
 
-/**
- * Removes a boss stat bar (Should be suffixed by `_Implementation` to follow RPC's convention)
- * @param DisconnectedBoss A boss character who will be removed from boss bars
- */
 void ABeadurincPlayerController::CloseBossBar_Implementation(const AFighterCharacter* DisconnectedBoss)
 {
 	if (ABeadurincHUD* BeadurincHUD = Cast<ABeadurincHUD>(GetHUD()))
 	{
 		BeadurincHUD->RemoveBossEntry(DisconnectedBoss);
+	}
+}
+
+void ABeadurincPlayerController::AlertCriticalAttacks_Implementation(const FGameplayTag& AttackType)
+{
+	if (APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetPawn()))
+	{
+		PlayerCharacter->AlertDangerAttacks(AttackType);
 	}
 }
 
