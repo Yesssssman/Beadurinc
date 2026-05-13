@@ -14,4 +14,5 @@ namespace StateGameplayTags
 	BEADURINC_API UE_DECLARE_GAMEPLAY_TAG_EXTERN( State_LockOnRotationSuppressed );
 	BEADURINC_API UE_DECLARE_GAMEPLAY_TAG_EXTERN( State_HoldComboSequence		 );
 	BEADURINC_API UE_DECLARE_GAMEPLAY_TAG_EXTERN( State_VulnerableToExecution    );
+	BEADURINC_API UE_DECLARE_GAMEPLAY_TAG_EXTERN( State_LowAttackDodgeable		 );
 }

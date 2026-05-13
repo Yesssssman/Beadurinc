@@ -15,6 +15,7 @@ class UWidgetComponent;
 class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
+class UInputComponent;
 struct FGameplayAbilitySpecHandle;
 struct FInputActionValue;
 
@@ -49,7 +50,7 @@ protected:
 	virtual void Tick(float DeltaSeconds) override;
 
 	/** Initialize input action bindings */
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
 	/** Called when a new controller takes control of this character. A sweet spot for handling player respawn in server. */
 	virtual void PossessedBy(AController* NewController) override;

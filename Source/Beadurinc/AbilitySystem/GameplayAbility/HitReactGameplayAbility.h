@@ -28,12 +28,12 @@ private:
 	
 	/** Montages to play on parrying attacks. Identified by AttackTypeTags */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations", meta = (AllowPrivateAccess = true))
-	TMap<FGameplayTag, UAnimMontage*> OnParry;
+	TMap<FGameplayTag, TObjectPtr<UAnimMontage>> OnParry;
 
-	/** Montage to play on damage applied to health */
+	/** Montages to play on damage applied to health by stun tags */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations", meta = (AllowPrivateAccess = true))
-	TObjectPtr<UAnimMontage> OnHurt;
-
+	TMap<FGameplayTag, TObjectPtr<UAnimMontage>> OnHit;
+	
 	/** Attacker pause time when hit */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations", meta = (AllowPrivateAccess = true))
 	float HitStop;

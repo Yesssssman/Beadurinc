@@ -53,9 +53,9 @@ EBTNodeResult::Type UBTTask_PlayMontageLatent::ExecuteTask(UBehaviorTreeComponen
 			{
 				if (UAttackMetaData* AttackAnimMetaData = Cast<UAttackMetaData>(ComboMetaData))
 				{
-					if (DangerAttackTypes.HasTag(AttackAnimMetaData->AttackTypeTag))
+					if (AttackAnimMetaData->DangerAttackTypeTag != FGameplayTag::EmptyTag)
 					{
-						PlayerController->AlertCriticalAttacks(AttackAnimMetaData->AttackTypeTag);
+						PlayerController->AlertCriticalAttacks(AttackAnimMetaData->DangerAttackTypeTag);
 						break;
 					}
 				}

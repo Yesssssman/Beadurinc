@@ -5,6 +5,7 @@
 #include "AbilitySystem/GameplayEffect/GE_HealthDamage.h"
 #include "AbilitySystem/GameplayEffect/GE_StaminaDamage.h"
 #include "AbilitySystem/GameplayTag/AbilityTags.h"
+#include "AbilitySystem/GameplayTag/AttackTypeTags.h"
 #include "AbilitySystem/GameplayTag/DataTags.h"
 #include "AbilitySystem/GameplayTag/GameplayEventTags.h"
 #include "Actor/Character/FighterCharacter.h"
@@ -33,28 +34,40 @@ void UHitReactGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	Context.AddHitResult(*TriggerEventData->ContextHandle.GetHitResult());
 	CueParams.EffectContext = Context;
 	
+	// Attack type metadata tags
+	const UAttackMetaData* MetaData = Cast<UAttackMetaData>(TriggerEventData->OptionalObject2);
+	
+	// Terminate early; When incoming attack is low attack but ability owner is jumping
+	if (
+		OwnerACS->HasMatchingGameplayTag(StateGameplayTags::State_LowAttackDodgeable) &&
+		MetaData->DangerAttackTypeTag == AttackTypeTags::AttackType_LowAttack
+	) {
+		return;
+	}
+	
 	// Save whether the attack was parried
 	bool Parried = false;
 	
-	// When blocking activated
-	if (OwnerACS->HasMatchingGameplayTag(StateGameplayTags::State_Blocking))
-	{
+	// Check blocking is possible
+	if (
+		OwnerACS->HasMatchingGameplayTag(StateGameplayTags::State_Blocking) &&
+		MetaData->DangerAttackTypeTag != AttackTypeTags::AttackType_LowAttack && // Can't guard low attacks
+		(MetaData->DangerAttackTypeTag != AttackTypeTags::AttackType_Pierce || OwnerACS->HasMatchingGameplayTag(StateGameplayTags::State_Parry)) // Can't guard pierce attack without parrying
+	) {
 		// Check parrying tag
 		if (OwnerACS->HasMatchingGameplayTag(StateGameplayTags::State_Parry))
 		{
-			if (const UAttackMetaData* MetaData = Cast<UAttackMetaData>(TriggerEventData->OptionalObject2))
+			if (MetaData && OnParry.Contains(MetaData->ParryDirectionTag))
 			{
-				if (UAnimMontage* ParryMontage = *OnParry.Find(MetaData->AttackTypeTag))
-				{
-					OwnerACS->PlayMontage(this, ActivationInfo, ParryMontage, 1.0F);
-					Parried = true;
-				}
-				else
-				{
-					// Play a default block animation when no parry animation found 
-					if (OnBlock) OwnerACS->PlayMontage(this, ActivationInfo, OnBlock, 1.0F);
-				}
+				OwnerACS->PlayMontage(this, ActivationInfo, *OnParry.Find(MetaData->ParryDirectionTag), 1.0F);
 			}
+			else
+			{
+				// Play a default block animation when no proper parry animation found 
+				if (OnBlock) OwnerACS->PlayMontage(this, ActivationInfo, OnBlock, 1.0F);
+			}
+			
+			Parried = true;
 		}
 		else
 		{
@@ -62,7 +75,14 @@ void UHitReactGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 		}
 		
 		// Plays gameplay cue for block
-		OwnerACS->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.MeleeBlock")), CueParams);
+		if (Parried)
+		{
+			OwnerACS->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.MeleeParry")), CueParams);
+		}
+		else
+		{
+			OwnerACS->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.MeleeBlock")), CueParams);
+		}
 		
 		// Applying stamina deflation
 		// Sets up GE context
@@ -91,7 +111,11 @@ void UHitReactGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	}
 	else
 	{
-		if (OnHurt) OwnerCharacter->PlayAnimMontage(OnHurt);
+		TObjectPtr<UAnimMontage>* StunMontage = OnHit.Find(MetaData->StunTag);
+		
+		// Play hit stun montage
+		if (StunMontage && IsValid(*StunMontage)) OwnerCharacter->PlayAnimMontage(*StunMontage);
+		
 		// Plays gameplay cue for hurt
 		OwnerACS->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.MeleeHurt")), CueParams);
 		

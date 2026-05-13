@@ -12,4 +12,5 @@ namespace StateGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT( State_LockOnRotationSuppressed,	"State.LockOnRotationSuppressed",	"A state where the actor should not rotate to face the lock-on target"	);
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT( State_HoldComboSequence,		"State.HoldComboSequence",			"A state that keeps combo counter (both for player & AI)"				);
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT( State_VulnerableToExecution,	"State.VulnerableToExecution",		"A state that allows to be executed by finisher moves"					);
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT( State_LowAttackDodgeable,		"State.LowAttackDodgeable",			"A state that being invulnerable to AttackTypeTags::LowAttack"			);
 }

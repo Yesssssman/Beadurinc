@@ -4,6 +4,7 @@
 #include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
 #include "AbilitySystem/GameplayTag/StateGameplayTags.h"
 #include "Actor/Character/PlayerCharacter.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 UBlockParryGameplayAbility::UBlockParryGameplayAbility()
 {
@@ -17,6 +18,12 @@ bool UBlockParryGameplayAbility::CanActivateAbility(const FGameplayAbilitySpecHa
 	if (APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(ActorInfo->AvatarActor.Get()))
 	{
 		if (PlayerCharacter->GetAbilitySystemComponent()->HasMatchingGameplayTag(StateGameplayTags::State_BlockingLocked))
+		{
+			return false;
+		}
+		
+		// Unable to block while in the air
+		if (PlayerCharacter->GetCharacterMovement()->IsFalling())
 		{
 			return false;
 		}
