@@ -180,3 +180,8 @@ void AFighterCharacter::ApplyStaminaRegenCooldown()
 		}
 	}
 }
+
+void AFighterCharacter::GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const
+{
+	GetAbilitySystemComponent()->GetOwnedGameplayTags(TagContainer);
+}

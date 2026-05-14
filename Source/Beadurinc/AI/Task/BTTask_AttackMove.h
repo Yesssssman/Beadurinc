@@ -2,27 +2,40 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
-#include "BTTask_ProgressByGameplayTags.generated.h"
+#include "BehaviorTree/ValueOrBBKey.h"
+#include "BTTask_AttackMove.generated.h"
 
-/**
- * A node that holds the BT flow based on GameplayTags
- */
 UCLASS()
-class BEADURINC_API UBTTask_ProgressByGameplayTags : public UBTTaskNode
+class BEADURINC_API UBTTask_AttackMove : public UBTTaskNode
 {
 	GENERATED_BODY()
 	
 public:
 	
 	/** Constructor */
-	UBTTask_ProgressByGameplayTags();
+	UBTTask_AttackMove();
 	
-protected:
+private:
+	
+	/**
+	 * Attack moves that shows alert icon ont player's top, the pierce and low attacks
+	 * 
+	 * Managed by container to ease checking
+	 */
+	static const FGameplayTagContainer DangerAttackTypes;
+	
+public:
 	
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	
-	/** Tick this task */
+protected:
+	
+	/** Ticking task */
 	virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
+	
+	/** Multicast function to play a montage in locals too */
+	UFUNCTION(NetMulticast, Reliable)
+	void PlayMontageMulticast(ACharacter* CharacterIn, UAnimMontage* MontageIn);
 	
 private:
 	
@@ -30,6 +43,9 @@ private:
 	EBTNodeResult::Type ValidateOwnerState(UBehaviorTreeComponent& OwnerComp);
 	
 private:
+	/** Animation Montage to play. Must compatible with the skeleton that BT owner has */
+	UPROPERTY(Category = Animation, EditAnywhere)
+	FValueOrBBKey_Object MontageToPlay = TObjectPtr<UAnimMontage>();
 	
 	/** Tag that represents the task is in-progress */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay Tags", meta = (allowPrivateAccess = true))
@@ -38,4 +54,6 @@ private:
 	/** Tag that represents the task failed */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay Tags", meta = (allowPrivateAccess = true))
 	FGameplayTagContainer FailureTags;
+	
+	// The node only succeed when Ability System owner doesn't have tags neither `InProgressTags` nor `FailureTags`.
 };

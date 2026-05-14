@@ -21,7 +21,7 @@ protected:
 	
 private:
 	
-	/** The threshold distance to judge if target is within boundary */
+	/** The tags to check whether included in owner actor's Ability System Component */
 	UPROPERTY(EditAnywhere, Category = "Condition", meta = (AllowPrivateAccess = true))
 	FGameplayTagContainer States;
 };

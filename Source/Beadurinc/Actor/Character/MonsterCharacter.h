@@ -31,17 +31,30 @@ public:
 	AMonsterCharacter();
 	
 public:
-	
+
 	/** Set the BehaviorTree state replicated to client */
 	FORCEINLINE void SetBTState(const EBehaviorTreeState BehaviorTreeState) { BTState = BehaviorTreeState; }
-	
+
 protected:
-	
+
+	/** Grants AI-only abilities (block / parry) on the authoritative side. */
+	virtual void BeginPlay() override;
+
+protected:
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DataAsset, meta = (AllowPrivateAccess = true))
 	TObjectPtr<UMobData> MobDataAsset;
-	
+
 	/** A state that will be replicate to client */
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = State, meta = (AllowPrivateAccess = true))
 	EBehaviorTreeState BTState;
-	
+
+	/** Granted on BeginPlay (authority only). Triggered via Ability.AI.Block gameplay event. */
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
+	TSubclassOf<UGameplayAbility> AIBlockAbility;
+
+	/** Granted on BeginPlay (authority only). Triggered via Ability.AI.Parry gameplay event. */
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
+	TSubclassOf<UGameplayAbility> AIParryAbility;
+
 };

@@ -18,7 +18,7 @@ public:
 protected:
 
 	virtual void BeginPlay() override;
-
+	
 public:
 
 	/** Returns currently targeting actor by AI Controller */

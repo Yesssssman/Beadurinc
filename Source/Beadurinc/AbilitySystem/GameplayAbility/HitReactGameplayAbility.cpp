@@ -36,6 +36,7 @@ void UHitReactGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	
 	// Attack type metadata tags
 	const UAttackMetaData* MetaData = Cast<UAttackMetaData>(TriggerEventData->OptionalObject2);
+	if (!MetaData) return;
 	
 	// Terminate early; When incoming attack is low attack but ability owner is jumping
 	if (

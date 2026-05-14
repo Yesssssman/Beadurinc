@@ -20,8 +20,12 @@ class UMotionWarpingComponent;
 ///
 /// Stats are managed by AttributeSet which means their modification is conducted
 /// by GameplayEffect based on attack damage attribute.
+/// 
+/// Implemented `IGameplayTagAssetInterface` to make actor visitable by
+/// `UBTDecorator_CheckGameplayTagsOnActor`.
 UCLASS(abstract)
-class BEADURINC_API AFighterCharacter : public ACharacter, public IAbilitySystemInterface, public IWeaponHolderInterface
+class BEADURINC_API AFighterCharacter :
+	public ACharacter, public IAbilitySystemInterface, public IWeaponHolderInterface, public IGameplayTagAssetInterface
 {
 	GENERATED_BODY()
 
@@ -72,6 +76,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ApplyStaminaRegenCooldown();
 	
+	/** UGameplayTagAssetInterface implementations*/
+	virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override;
+
 private:
 
 	/** Spawn a weapon actor to skeletal mesh socket if `WeaponActorBlueprint` is valid */
