@@ -13,44 +13,73 @@ UComboAttackGameplayAbility::UComboAttackGameplayAbility()
 	ComboCounter = 0;
 }
 
-/** Plays next combo montage by ability task */
+/** Plays next combo or dash montage by ability task */
 void UComboAttackGameplayAbility::PlayNextComboAttack()
 {
 	APlayerCharacter* BCharacter = Cast<APlayerCharacter>(CurrentActorInfo->AvatarActor.Get());
-	
-	// Checks weapon in hand
-	if (BCharacter && BCharacter->IsHoldingWeapon())
+
+	if (!BCharacter || !BCharacter->IsHoldingWeapon()) return;
+
+	FRotator ActorRotation = BCharacter->GetActorRotation();
+	FRotator ControlRotation = BCharacter->GetController()->GetControlRotation();
+
+	BCharacter->SetActorRotation(FRotator(ActorRotation.Pitch, ControlRotation.Yaw, ActorRotation.Roll));
+
+	if (LastComboMontagePlayTask)
 	{
-		FRotator ActorRotation = BCharacter->GetActorRotation();
-		FRotator ControlRotation = BCharacter->GetController()->GetControlRotation();
-		
-		BCharacter->SetActorRotation(FRotator(ActorRotation.Pitch, ControlRotation.Yaw, ActorRotation.Roll));
-		
-		// Add combo lock state
-		BCharacter->GetAbilitySystemComponent()->AddLooseGameplayTag(StateGameplayTags::State_ComboLocked);
-		
-		if (LastComboMontagePlayTask)
-		{
-			// Force cancel of the old task to prevent calling `EndAbility` abnormally
-			LastComboMontagePlayTask->ExternalCancel();
-		}
-		
-		// Triggers by play montage ability task (activates until montage ends)
-		UAbilityTask_PlayMontageAndWait* AbilityTaskPlayMontage = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
-			this,
-			TEXT("ComboAttack"),
-			BCharacter->GetWeaponActor()->GetComboAttackAt(ComboCounter)
-		);
-		
-		AbilityTaskPlayMontage->OnCompleted.AddDynamic(this, &UComboAttackGameplayAbility::OnMontageCompleted);
-		AbilityTaskPlayMontage->OnInterrupted.AddDynamic(this, &UComboAttackGameplayAbility::OnMontageInterrupted);
-		AbilityTaskPlayMontage->ReadyForActivation();
-		LastComboMontagePlayTask = AbilityTaskPlayMontage;
-		
-		// Clamp combo counter to combo montage array length
-		ComboCounter = (ComboCounter + 1) % BCharacter->GetWeaponActor()->GetComboSequenceLength();
-		BCharacter->ClearInputBuffer();
+		// Force cancel of the old task to prevent calling `EndAbility` abnormally
+		LastComboMontagePlayTask->ExternalCancel();
 	}
+
+	// Checks low attack immunity that is granted by jumping ability
+	const bool bJumpBranch = CurrentActorInfo->AbilitySystemComponent->HasMatchingGameplayTag(StateGameplayTags::State_LowAttackDodgeable) && IsValid(BCharacter->GetWeaponActor()->GetJumpAttack());
+
+	// Sprint check uses actual planar velocity, not MaxWalkSpeed, so a "sprint toggled on but standing still" state doesn't fire dash.
+	const bool bDashBranch = BCharacter->GetVelocity().Size2D() > 300.0F && IsValid(BCharacter->GetWeaponActor()->GetDashAttack());
+
+	TObjectPtr<UAnimMontage> NextMontage;
+	
+	if (bJumpBranch)
+	{
+		NextMontage = BCharacter->GetWeaponActor()->GetJumpAttack();
+		// Discards any in-progress combo chain.
+		ResetComboCounter();
+	}
+	else if (bDashBranch)
+	{
+		NextMontage = BCharacter->GetWeaponActor()->GetDashAttack();
+		// Discards any in-progress combo chain.
+		ResetComboCounter();
+	}
+	else
+	{
+		NextMontage = BCharacter->GetWeaponActor()->GetComboAttackAt(ComboCounter);
+	}
+
+	if (!IsValid(NextMontage)) return;
+
+	// Triggers by play montage ability task (activates until montage ends)
+	UAbilityTask_PlayMontageAndWait* AbilityTaskPlayMontage = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+		this,
+		TEXT("ComboAttack"),
+		NextMontage
+	);
+
+	AbilityTaskPlayMontage->OnCompleted.AddDynamic(this, &UComboAttackGameplayAbility::OnMontageCompleted);
+	AbilityTaskPlayMontage->OnInterrupted.AddDynamic(this, &UComboAttackGameplayAbility::OnMontageInterrupted);
+	AbilityTaskPlayMontage->ReadyForActivation();
+	LastComboMontagePlayTask = AbilityTaskPlayMontage;
+
+	// Add combo lock state
+	CurrentActorInfo->AbilitySystemComponent->AddLooseGameplayTag(StateGameplayTags::State_ComboLocked);
+	
+	// Only the combo path advances the counter; dash is single-shot.
+	if (!bDashBranch)
+	{
+		ComboCounter = (ComboCounter + 1) % BCharacter->GetWeaponActor()->GetComboSequenceLength();
+	}
+
+	BCharacter->ClearInputBuffer();
 }
 
 bool UComboAttackGameplayAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, OUT FGameplayTagContainer* OptionalRelevantTags) const
@@ -82,10 +111,10 @@ void UComboAttackGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHand
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 	
-	PlayNextComboAttack();
-	
 	UAbilitySystemComponent* OwnerACS = ActorInfo->AbilitySystemComponent.Get();
 	if (!OwnerACS) return;
+	
+	PlayNextComboAttack();
 	
 	// Cancel blocking ability if enabled
 	FGameplayTagContainer TargetTags;

@@ -43,42 +43,66 @@ public:
 	void ResetStats();
 
 	/** Returns Ability Component object **/
-	FORCEINLINE virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override { return AbilitySystemComponent; };
+	FORCEINLINE virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override { return AbilitySystemComponent; }
 
-	FORCEINLINE virtual TObjectPtr<UAttributeSet> GetAttributeSet() const { return AttributeSet; };
+	FORCEINLINE TObjectPtr<UAttributeSet> GetAttributeSet() const { return AttributeSet; }
 
+	FORCEINLINE int GetRemainingHealingPotions() const { return RemainingHealingPotion; }
+	
+	void ConsumeHealingPotion();
+	
 private:
 	/// Keeping ASC in PlayerState will persist the player data (cooldown, score) after death
 	/// and respawn, allowing a player respawns with previous data.
 	UPROPERTY()
 	UAbilitySystemComponent* AbilitySystemComponent;
-
+	
 	/** Attribute Set Class */
 	UPROPERTY(EditDefaultsOnly, Category="Attribute")
 	TSubclassOf<UAttributeSet> AttributeSetClass;
-
+	
 	/** Gameplay Ability class for Combo Attacks */
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
 	TSubclassOf<UGameplayAbility> ComboAttackAbility;
-
+	
 	/** Gameplay Ability class for Blocking */
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
 	TSubclassOf<UGameplayAbility> BlockAbility;
-
+	
 	/** Gameplay Ability class for Rolling */
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
 	TSubclassOf<UGameplayAbility> RollAbility;
-
+	
 	/** Gameplay Ability class for a vulnerable target execution */
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
 	TSubclassOf<UGameplayAbility> ExecutionAbility;
 	
+	/** Gameplay Ability class for the hold-triggered heavy attack */
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
+	TSubclassOf<UGameplayAbility> HeavyAttackAbility;
+	
+	/** Gameplay Ability class for the hold-triggered heavy attack */
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
+	TSubclassOf<UGameplayAbility> HealAbility;
+	
 	/** Data Table for initializing AttributeSet data */
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Abilities")
 	TObjectPtr<UDataTable> InitialStatsTable;
-
+	
+	/** Remaining healing potion counts. Not an AttributeSet data to be integer value */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attribute", meta = (AllowPrivateAccess = true))
+	int RemainingHealingPotion;
+	
 protected:
+	
 	/** Gameplay Abilities Attribute Set */
 	UPROPERTY()
 	TObjectPtr<UAttributeSet> AttributeSet;
+	
+public:
+	
+	/** Memorized for widget */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gameplay Abilities")
+	FGameplayAbilitySpecHandle RollAbilitySpecHandle;
+	
 };

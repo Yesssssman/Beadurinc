@@ -47,7 +47,7 @@ void UBlockParryGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandl
 	// Allows parrying within time window 0.5 seconds
 	UAbilityTask_WaitDelay* AT_WaitDelay = UAbilityTask_WaitDelay::WaitDelay(
 		this,
-		0.5F
+		0.25F
 	);
 	
 	AT_WaitDelay->OnFinish.AddDynamic(this, &UBlockParryGameplayAbility::OnParryWindowFinished);

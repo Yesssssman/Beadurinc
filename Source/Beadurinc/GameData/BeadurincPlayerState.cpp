@@ -1,6 +1,8 @@
 #include "BeadurincPlayerState.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/AbilityId.h"
+#include "AbilitySystem/GameplayEffect/GE_HealthModifier.h"
+#include "AbilitySystem/GameplayTag/DataTags.h"
 
 ABeadurincPlayerState::ABeadurincPlayerState()
 {
@@ -39,7 +41,7 @@ void ABeadurincPlayerState::BeginPlay()
 		if (RollAbility)
 		{
 			FGameplayAbilitySpec RollAbilitySpec(RollAbility, 1, static_cast<int32>(EAbilityId::Roll), this);
-			AbilitySystemComponent->GiveAbility(RollAbilitySpec);
+			RollAbilitySpecHandle = AbilitySystemComponent->GiveAbility(RollAbilitySpec);
 		}
 		
 		// Give execution ability
@@ -47,6 +49,20 @@ void ABeadurincPlayerState::BeginPlay()
 		{
 			FGameplayAbilitySpec ExecutionAbilitySpec(ExecutionAbility, 1, static_cast<int32>(EAbilityId::Execution), this);
 			AbilitySystemComponent->GiveAbility(ExecutionAbilitySpec);
+		}
+
+		// Give heavy attack ability
+		if (HeavyAttackAbility)
+		{
+			FGameplayAbilitySpec HeavyAttackAbilitySpec(HeavyAttackAbility, 1, static_cast<int32>(EAbilityId::Heavy_Attack), this);
+			AbilitySystemComponent->GiveAbility(HeavyAttackAbilitySpec);
+		}
+
+		// Give self healing ability
+		if (HealAbility)
+		{
+			FGameplayAbilitySpec HeavyAttackAbilitySpec(HealAbility, 1, static_cast<int32>(EAbilityId::Heal), this);
+			AbilitySystemComponent->GiveAbility(HeavyAttackAbilitySpec);
 		}
 		
 		if (AttributeSetClass)
@@ -67,5 +83,28 @@ void ABeadurincPlayerState::ResetStats()
 	if (InitialStatsTable)
 	{
 		AbilitySystemComponent->InitStats(AttributeSetClass, InitialStatsTable);
+	}
+	
+	RemainingHealingPotion = 10;
+}
+
+void ABeadurincPlayerState::ConsumeHealingPotion()
+{
+	RemainingHealingPotion = FMath::Max(RemainingHealingPotion - 1, 0);
+	
+	const ULivingAttributeSet* LivingAttributeSet = CastChecked<ULivingAttributeSet>(AbilitySystemComponent->GetAttributeSet(ULivingAttributeSet::StaticClass()));
+	
+	if (LivingAttributeSet)
+	{
+		FGameplayEffectContextHandle GEContext = AbilitySystemComponent->MakeEffectContext();
+		
+		// Create GE spec handler to apply stamina & health damage
+		FGameplayEffectSpecHandle SpecHandleHealth = AbilitySystemComponent->MakeOutgoingSpec(UGE_HealthModifier::StaticClass(), 1.0F, GEContext);
+		
+		if (SpecHandleHealth.IsValid())
+		{
+			SpecHandleHealth.Data.Get()->SetSetByCallerMagnitude(DataTags::DataTag_Health, 120);
+			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandleHealth.Data.Get());
+		}
 	}
 }

@@ -25,5 +25,13 @@ public:
 	FGameplayTag StunTag;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stun")
-	TObjectPtr<UAnimMontage> OnParried; 
+	TObjectPtr<UAnimMontage> OnParried;
+	
+	/** Multiply to the weapon's base health damage */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage")
+	float HealthDamageMultiplier = 1.0F;
+	
+	/** Multiply to the weapon's base stamina damage */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage")
+	float StaminaDamageMultiplier = 1.0F;
 };

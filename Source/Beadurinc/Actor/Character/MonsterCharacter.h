@@ -31,15 +31,23 @@ public:
 	AMonsterCharacter();
 	
 public:
-
+	
 	/** Set the BehaviorTree state replicated to client */
 	FORCEINLINE void SetBTState(const EBehaviorTreeState BehaviorTreeState) { BTState = BehaviorTreeState; }
-
+	
+	/**
+	 * Triggerred on combat event like strike, parrying, being hurt, parried, to continue pushing target
+	 * or retreat and take a brief rest based on the score.
+	 * 
+	 * +score will induce AI to retreat, and -score will keep pushing the target
+	 */
+	void ModifyBlackboardScore(const FName& BlackboardKeyName, const int& BaseScore, const int& Distribution);
+	
 protected:
 
 	/** Grants AI-only abilities (block / parry) on the authoritative side. */
 	virtual void BeginPlay() override;
-
+	
 protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = DataAsset, meta = (AllowPrivateAccess = true))

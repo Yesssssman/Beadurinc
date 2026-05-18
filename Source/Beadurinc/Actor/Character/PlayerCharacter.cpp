@@ -141,8 +141,6 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	
-	const ULivingAttributeSet* LAS = CastChecked<ULivingAttributeSet>(AbilitySystemComponent->GetAttributeSet(ULivingAttributeSet::StaticClass()));
-	
 	if (bLockingOnCamera)
 	{
 		// When locking on character no longer valid, unlock the camera
@@ -189,7 +187,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &APlayerCharacter::DoJumpStart);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		// Moving
@@ -204,12 +202,17 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(CameraLockAction, ETriggerEvent::Started, this, &APlayerCharacter::ToggleCamLock);
 		
 		// Combo Attack Ability
-		EnhancedInputComponent->BindAction(ComboAttackAction, ETriggerEvent::Started, this, &APlayerCharacter::PressAbility, static_cast<int32>(EAbilityId::Combo_Attack));
-		EnhancedInputComponent->BindAction(ComboAttackAction, ETriggerEvent::Completed, this, &APlayerCharacter::ReleaseAbility, static_cast<int32>(EAbilityId::Combo_Attack));
+		EnhancedInputComponent->BindAction(ComboAttackAction, ETriggerEvent::Completed, this, &APlayerCharacter::PressAbility, static_cast<int32>(EAbilityId::Combo_Attack));
 		
 		// Execution Ability
-		EnhancedInputComponent->BindAction(ComboAttackAction, ETriggerEvent::Started, this, &APlayerCharacter::PressAbility, static_cast<int32>(EAbilityId::Execution));
+		EnhancedInputComponent->BindAction(ComboAttackAction, ETriggerEvent::Completed, this, &APlayerCharacter::PressAbility, static_cast<int32>(EAbilityId::Execution));
+
+		// Heavy Attack Ability
+		EnhancedInputComponent->BindAction(HeavyAttackAction, ETriggerEvent::Completed, this, &APlayerCharacter::PressAbility, static_cast<int32>(EAbilityId::Heavy_Attack));
 		
+		// Heavy Attack Ability
+		EnhancedInputComponent->BindAction(HealAction, ETriggerEvent::Completed, this, &APlayerCharacter::PressAbility, static_cast<int32>(EAbilityId::Heal));
+
 		// Blocking Ability
 		EnhancedInputComponent->BindAction(BlockAction, ETriggerEvent::Triggered, this, &APlayerCharacter::PressAbility, static_cast<int32>(EAbilityId::Block));
 		EnhancedInputComponent->BindAction(BlockAction, ETriggerEvent::Completed, this, &APlayerCharacter::ReleaseAbility, static_cast<int32>(EAbilityId::Block));
@@ -362,6 +365,9 @@ void APlayerCharacter::DoLook(float Yaw, float Pitch)
 
 void APlayerCharacter::DoJumpStart()
 {
+	// Can't jump while taking an action
+	if (AbilitySystemComponent->HasMatchingGameplayTag(StateGameplayTags::State_JumpingLocked)) return;
+	
 	// signal the character to jump
 	Jump();
 }

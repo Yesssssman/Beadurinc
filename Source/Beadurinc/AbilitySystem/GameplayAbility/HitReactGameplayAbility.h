@@ -34,6 +34,10 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations", meta = (AllowPrivateAccess = true))
 	TMap<FGameplayTag, TObjectPtr<UAnimMontage>> OnHit;
 	
+	/** A montage to play instead `OnHit` animations when stuns are ignored */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations", meta = (AllowPrivateAccess = true))
+	TObjectPtr<UAnimMontage> OnHitAdditive;
+	
 	/** Attacker pause time when hit */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations", meta = (AllowPrivateAccess = true))
 	float HitStop;
@@ -45,5 +49,4 @@ private:
 	/** Stamina damage attenuation when hurt */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects", meta = (AllowPrivateAccess = true))
 	float StaminaDamageAttenuation = 1.0F;
-	
 };

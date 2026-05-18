@@ -37,7 +37,7 @@ protected:
 
 	/** Callback after ParryWindow elapses */
 	UFUNCTION()
-	void OnParryWindowFinished();
+	void OnExpired();
 
 	/** Callback when the avatar receives Event.Combat.Hit while parrying. Ends the ability early. */
 	UFUNCTION()
@@ -48,8 +48,8 @@ private:
 	/** Optional parry stance montage. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Animations, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimMontage> ParryMontage;
-
-	/** Duration the avatar holds both State_Blocking and State_Parry. */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Behavior, meta = (AllowPrivateAccess = "true", ClampMin = "0.05"))
-	float ParryWindow = 0.4F;
+	
+	/** Duration persists at least this time */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Animations, meta = (AllowPrivateAccess = "true"))
+	float LeastDuration;
 };

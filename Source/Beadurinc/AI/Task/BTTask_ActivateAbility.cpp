@@ -73,6 +73,8 @@ EBTNodeResult::Type UBTTask_ActivateAbility::ExecuteTask(UBehaviorTreeComponent&
 
 void UBTTask_ActivateAbility::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
+	
+	
 	FBTActivateAbilityMemory* Memory = CastInstanceNodeMemory<FBTActivateAbilityMemory>(NodeMemory);
 	if (!Memory || !Memory->TrackedHandle.IsValid())
 	{
@@ -91,6 +93,13 @@ void UBTTask_ActivateAbility::TickTask(UBehaviorTreeComponent& OwnerComp, uint8*
 	}
 
 	UAbilitySystemComponent* ASC = AICharacter->GetAbilitySystemComponent();
+	
+	if (ASC->HasAnyMatchingGameplayTags(ProgressingTags))
+	{
+		// In Progress...
+		return;
+	}
+	
 	const FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromHandle(Memory->TrackedHandle);
 
 	// Spec gone or no longer active → ability finished.
@@ -98,4 +107,6 @@ void UBTTask_ActivateAbility::TickTask(UBehaviorTreeComponent& OwnerComp, uint8*
 	{
 		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 	}
+	
+	// In Progress...
 }

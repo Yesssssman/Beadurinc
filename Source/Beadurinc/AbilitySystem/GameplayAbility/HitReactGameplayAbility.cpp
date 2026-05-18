@@ -2,13 +2,15 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/GameplayTag/StateGameplayTags.h"
 #include "AbilitySystemComponent.h"
-#include "AbilitySystem/GameplayEffect/GE_HealthDamage.h"
-#include "AbilitySystem/GameplayEffect/GE_StaminaDamage.h"
+#include "AbilitySystem/GameplayEffect/GE_HealthModifier.h"
+#include "AbilitySystem/GameplayEffect/GE_StaminaModifier.h"
 #include "AbilitySystem/GameplayTag/AbilityTags.h"
 #include "AbilitySystem/GameplayTag/AttackTypeTags.h"
 #include "AbilitySystem/GameplayTag/DataTags.h"
 #include "AbilitySystem/GameplayTag/GameplayEventTags.h"
 #include "Actor/Character/FighterCharacter.h"
+#include "Actor/Character/MonsterCharacter.h"
+#include "Actor/Character/PlayerCharacter.h"
 #include "Animation/Metadata/AttackMetaData.h"
 
 void UHitReactGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -36,13 +38,28 @@ void UHitReactGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	
 	// Attack type metadata tags
 	const UAttackMetaData* MetaData = Cast<UAttackMetaData>(TriggerEventData->OptionalObject2);
-	if (!MetaData) return;
 	
-	// Terminate early; When incoming attack is low attack but ability owner is jumping
+	if (!MetaData)
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, false, false);
+		return;
+	}
+	
+	// Terminate earlier; When incoming attack is low attack but ability owner has jumping state tag
 	if (
 		OwnerACS->HasMatchingGameplayTag(StateGameplayTags::State_LowAttackDodgeable) &&
 		MetaData->DangerAttackTypeTag == AttackTypeTags::AttackType_LowAttack
 	) {
+		EndAbility(Handle, ActorInfo, ActivationInfo, false, false);
+		return;
+	}
+	
+	// Terminate earlier; When the ability owner has dodge invincible state tag and incoming attack is not a low-attack
+	if (
+		OwnerACS->HasMatchingGameplayTag(StateGameplayTags::State_Invincible) &&
+		MetaData->DangerAttackTypeTag != AttackTypeTags::AttackType_LowAttack
+	) {
+		EndAbility(Handle, ActorInfo, ActivationInfo, false, false);
 		return;
 	}
 	
@@ -92,11 +109,11 @@ void UHitReactGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 		GEContext.AddSourceObject(Attacker->GetWeaponActor());
 		
 		// Create GE spec handler to apply damage
-		FGameplayEffectSpecHandle SpecHandle = OwnerACS->MakeOutgoingSpec(UGE_StaminaDamage::StaticClass(), 1.0F,GEContext);
+		FGameplayEffectSpecHandle SpecHandle = OwnerACS->MakeOutgoingSpec(UGE_StaminaModifier::StaticClass(), 1.0F,GEContext);
 		
 		if (SpecHandle.IsValid())
 		{
-			// Apply x0.15 stamina deflation when parried
+			// Apply x0.15 stamina deflation when parried, and no stamina multiplier applied from metadata
 			SpecHandle.Data.Get()->SetSetByCallerMagnitude(DataTags::DataTag_Stamina, -Attacker->GetWeaponActor()->GetStaminaDamage() * (Parried ? 0.15F : 1.0F));
 			OwnerACS->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 			
@@ -106,16 +123,41 @@ void UHitReactGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 				if (!Parried && Stagger && LivingAttributes->GetStamina() <= 0.0F)
 				{
 					OwnerACS->PlayMontage(this, ActivationInfo, Stagger, 1.0F);
+					OwnerACS->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Stagger")), CueParams);
+					
+					// Restore stamina
+					GEContext.AddInstigator(OwnerCharacter, OwnerCharacter);
+					FGameplayEffectSpecHandle StaminaSpecHandle = OwnerACS->MakeOutgoingSpec(UGE_StaminaModifier::StaticClass(), 1.0F,GEContext);
+					StaminaSpecHandle.Data.Get()->SetSetByCallerMagnitude(DataTags::DataTag_Stamina, 20.0F);
+					OwnerACS->ApplyGameplayEffectSpecToSelf(*StaminaSpecHandle.Data.Get());
 				}
 			}
 		}
 	}
-	else
+	else // Applying damage to health
 	{
-		TObjectPtr<UAnimMontage>* StunMontage = OnHit.Find(MetaData->StunTag);
+		if (OwnerACS->HasMatchingGameplayTag(StateGameplayTags::State_StunResist))
+		{
+			// Play hit stun additive montage
+			if (OnHitAdditive) OwnerCharacter->PlayAnimMontage(OnHitAdditive);
+		}
+		else
+		{
+			TObjectPtr<UAnimMontage>* StunMontage = OnHit.Find(MetaData->StunTag);
 		
-		// Play hit stun montage
-		if (StunMontage && IsValid(*StunMontage)) OwnerCharacter->PlayAnimMontage(*StunMontage);
+			// Play hit stun montage
+			if (StunMontage && IsValid(*StunMontage))
+			{
+				OwnerCharacter->PlayAnimMontage(*StunMontage);
+				
+				// Early application of state tags
+				FGameplayTagContainer TagContainer;
+				TagContainer.AddTag(StateGameplayTags::State_ComboLocked);
+				TagContainer.AddTag(StateGameplayTags::State_BlockingLocked);
+				TagContainer.AddTag(StateGameplayTags::State_RollingLocked);
+				OwnerACS->AddLooseGameplayTags(TagContainer);
+			}
+		}
 		
 		// Plays gameplay cue for hurt
 		OwnerACS->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.MeleeHurt")), CueParams);
@@ -127,18 +169,18 @@ void UHitReactGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 		GEContext.AddSourceObject(Attacker->GetWeaponActor());
 		
 		// Create GE spec handler to apply stamina & health damage
-		FGameplayEffectSpecHandle SpecHandleHealth = OwnerACS->MakeOutgoingSpec(UGE_HealthDamage::StaticClass(), 1.0F, GEContext);
-		FGameplayEffectSpecHandle SpecHandleStamina = OwnerACS->MakeOutgoingSpec(UGE_StaminaDamage::StaticClass(), 1.0F, GEContext);
+		FGameplayEffectSpecHandle SpecHandleHealth = OwnerACS->MakeOutgoingSpec(UGE_HealthModifier::StaticClass(), 1.0F, GEContext);
+		FGameplayEffectSpecHandle SpecHandleStamina = OwnerACS->MakeOutgoingSpec(UGE_StaminaModifier::StaticClass(), 1.0F, GEContext);
 		
 		if (SpecHandleHealth.IsValid())
 		{
-			SpecHandleHealth.Data.Get()->SetSetByCallerMagnitude(DataTags::DataTag_Health, -Attacker->GetWeaponActor()->GetHealthDamage());
+			SpecHandleHealth.Data.Get()->SetSetByCallerMagnitude(DataTags::DataTag_Health, -Attacker->GetWeaponActor()->GetHealthDamage() * MetaData->HealthDamageMultiplier);
 			OwnerACS->ApplyGameplayEffectSpecToSelf(*SpecHandleHealth.Data.Get());
 		}
 		
 		if (SpecHandleStamina.IsValid())
 		{
-			SpecHandleStamina.Data.Get()->SetSetByCallerMagnitude(DataTags::DataTag_Stamina, -Attacker->GetWeaponActor()->GetStaminaDamage() * StaminaDamageAttenuation);
+			SpecHandleStamina.Data.Get()->SetSetByCallerMagnitude(DataTags::DataTag_Stamina, -Attacker->GetWeaponActor()->GetStaminaDamage() * MetaData->StaminaDamageMultiplier * StaminaDamageAttenuation);
 			OwnerACS->ApplyGameplayEffectSpecToSelf(*SpecHandleStamina.Data.Get());
 			
 			if (const ULivingAttributeSet* LivingAttributes = Cast<ULivingAttributeSet>(OwnerACS->GetAttributeSet(ULivingAttributeSet::StaticClass())))
@@ -148,8 +190,30 @@ void UHitReactGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 				{
 					OwnerACS->PlayMontage(this, ActivationInfo, Stagger, 1.0F);
 					OwnerACS->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Stagger")), CueParams);
+					
+					// Restore stamina
+					GEContext.AddInstigator(OwnerCharacter, OwnerCharacter);
+					FGameplayEffectSpecHandle StaminaSpecHandle = OwnerACS->MakeOutgoingSpec(UGE_StaminaModifier::StaticClass(), 1.0F,GEContext);
+					StaminaSpecHandle.Data.Get()->SetSetByCallerMagnitude(DataTags::DataTag_Stamina, 20.0F);
+					OwnerACS->ApplyGameplayEffectSpecToSelf(*StaminaSpecHandle.Data.Get());
 				}
 			}
+		}
+		
+		// Gives combat feedbacks to each character: owner was offended, situation went bad for owner, good for enemy.
+		
+		if (AMonsterCharacter* OwnerAsMonster = Cast<AMonsterCharacter>(OwnerCharacter))
+		{
+			// Negative feedback to owner
+			OwnerAsMonster->ModifyBlackboardScore(FName("RetreatScore"), 4, 5);
+			// Also increases the blocking score
+			OwnerAsMonster->ModifyBlackboardScore(FName("BlockScore"), 30, 60);
+		}
+		
+		if (AMonsterCharacter* AttackerAsMonster = Cast<AMonsterCharacter>(Attacker))
+		{
+			// Positive feedback to enemy
+			AttackerAsMonster->ModifyBlackboardScore(FName("RetreatScore"), -8, -20);
 		}
 	}
 	

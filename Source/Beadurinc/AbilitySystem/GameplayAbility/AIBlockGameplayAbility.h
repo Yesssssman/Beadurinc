@@ -31,15 +31,19 @@ protected:
 
 	/** Callback after BlockDuration elapses */
 	UFUNCTION()
-	void OnBlockDurationFinished();
+	void OnExpired();
 
+	/** Callback when the avatar receives Event.Combat.Hit while parrying. Ends the ability early. */
+	UFUNCTION()
+	void OnHitReceived(FGameplayEventData Payload);
+	
 private:
 
 	/** Optional stance montage. May be null; ABP can drive the pose from State_Blocking instead. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Animations, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimMontage> BlockMontage;
-
-	/** How long the avatar holds State_Blocking before the ability ends. */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Behavior, meta = (AllowPrivateAccess = "true", ClampMin = "0.05"))
-	float BlockDuration = 1.5F;
+	
+	/** Duration persists at least this time */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Animations, meta = (AllowPrivateAccess = "true"))
+	float LeastDuration;
 };

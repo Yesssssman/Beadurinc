@@ -34,20 +34,24 @@ public:
 	
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	
+	virtual void InitializeMemory(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTMemoryInit::Type InitType) const override;
+	
+	FORCEINLINE virtual uint16 GetInstanceMemorySize() const override { return sizeof(FBTActivateAbilityMemory); }
+	
 protected:
 	
 	/** Ticking task */
 	virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
-	
-	virtual uint16 GetInstanceMemorySize() const override { return sizeof(FBTActivateAbilityMemory); }
-	
-	virtual void InitializeMemory(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTMemoryInit::Type InitType) const override;
 	
 private:
 	
 	/** A gameplay tag that is bound to trigger an ability */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Gameplay Ability", meta = (AllowPrivateAccess = true))
 	FGameplayTag AbilityTriggerTag;
+	
+	/** Gameplay tags that should regard this task node as "InProgress" even tho the ability is deactivated */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Gameplay Ability", meta = (AllowPrivateAccess = true))
+	FGameplayTagContainer ProgressingTags;
 	
 	/** If true, the task stays InProgress until the activated ability ends. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Gameplay Ability", meta = (AllowPrivateAccess = true))

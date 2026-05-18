@@ -110,13 +110,27 @@ void AFighterCharacter::OnMeleeContacts(UPrimitiveComponent* OverlappedComponent
 	EventContext.Target = OtherActor;
 	EventContext.OptionalObject = GetWeaponActor();
 	
-	if (!GetCurrentMontage()->GetMetaData().IsEmpty())
+	UAnimInstance* AnimInstance = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr;
+	if (!AnimInstance) return;
+	
+	// Iterate through all currently executing montage instances to find attack animation metadata
+	for (FAnimMontageInstance* MontageInstance : AnimInstance->MontageInstances)
 	{
-		// Magic number warning: attack info should always be at 0'th index. There's no other anim metadata we current use
-		// so consider better implementation when we need more metadata
-		const UAnimMetaData* Metadata = GetCurrentMontage()->GetMetaData()[0];
-		
-		EventContext.OptionalObject2 = Metadata;
+		if (MontageInstance)
+		{
+			if (MontageInstance->IsPlaying())
+			{
+				UAnimMontage* MontagePlaying = MontageInstance->Montage;
+                
+				if (!MontagePlaying->GetMetaData().IsEmpty())
+				{
+					// Magic number warning: attack info should always be at 0'th index. There's no other anim metadata we current use
+					// so consider better implementation when we need more metadata
+					const UAnimMetaData* Metadata = MontagePlaying->GetMetaData()[0];
+					EventContext.OptionalObject2 = Metadata;
+				}
+			}
+		}
 	}
 	
 	EventContext.ContextHandle = GetAbilitySystemComponent()->MakeEffectContext();

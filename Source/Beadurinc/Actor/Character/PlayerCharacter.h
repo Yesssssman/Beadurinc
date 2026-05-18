@@ -176,6 +176,10 @@ private:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* ComboAttackAction;
 
+	/** Heavy Attack Ability Input Action — distinct from ComboAttackAction so a UInputTriggerHold can fire only after the hold threshold without delaying combo taps. */
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* HeavyAttackAction;
+
 	/** Sword Blocking Ability Input Action */
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* BlockAction;
@@ -184,6 +188,10 @@ private:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* RollAction;
 
+	/** Self-healing Ability Input Action */
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* HealAction;
+	
 	/** Maximum Distance of Lockable Target */
 	UPROPERTY(EditAnywhere, Category="Camera")
 	double LockOnDistance;

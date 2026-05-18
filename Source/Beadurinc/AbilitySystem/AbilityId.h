@@ -8,4 +8,6 @@ enum class EAbilityId : int32
 	Hit_React = 4,
 	Parry_React = 5,
 	Execution = 6,
+	Heavy_Attack = 7,
+	Heal = 8,
 };

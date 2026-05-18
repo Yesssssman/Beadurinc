@@ -29,11 +29,6 @@ void UAIParryGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle H
 
 	if (IsValid(ParryMontage)) Fighter->PlayAnimMontage(ParryMontage);
 
-	// Hard time-out: end after the parry window.
-	UAbilityTask_WaitDelay* AT_WaitDelay = UAbilityTask_WaitDelay::WaitDelay(this, ParryWindow);
-	AT_WaitDelay->OnFinish.AddDynamic(this, &UAIParryGameplayAbility::OnParryWindowFinished);
-	AT_WaitDelay->ReadyForActivation();
-
 	// Early-out: end as soon as a hit is consumed during the window so the BT isn't blocked waiting.
 	// OnlyTriggerOnce=true so the task auto-cancels itself after a single event.
 	UAbilityTask_WaitGameplayEvent* AT_WaitHit = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
@@ -45,6 +40,11 @@ void UAIParryGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle H
 	);
 	AT_WaitHit->EventReceived.AddDynamic(this, &UAIParryGameplayAbility::OnHitReceived);
 	AT_WaitHit->ReadyForActivation();
+	
+	// Timeout: ability persists at least this amount of time to prevent block spamming
+	UAbilityTask_WaitDelay* AT_WaitDelay = UAbilityTask_WaitDelay::WaitDelay(this, LeastDuration);
+	AT_WaitDelay->OnFinish.AddDynamic(this, &UAIParryGameplayAbility::OnExpired);
+	AT_WaitDelay->ReadyForActivation();
 }
 
 void UAIParryGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -53,8 +53,6 @@ void UAIParryGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle
 
 	AFighterCharacter* Fighter = Cast<AFighterCharacter>(ActorInfo->AvatarActor.Get());
 	if (!Fighter) return;
-
-	if (IsValid(ParryMontage)) Fighter->StopAnimMontage(ParryMontage);
 
 	UAbilitySystemComponent* ASC = Fighter->GetAbilitySystemComponent();
 	if (!ASC) return;
@@ -70,7 +68,7 @@ void UAIParryGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle
 	}
 }
 
-void UAIParryGameplayAbility::OnParryWindowFinished()
+void UAIParryGameplayAbility::OnExpired()
 {
 	if (!IsActive()) return;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
@@ -78,9 +76,6 @@ void UAIParryGameplayAbility::OnParryWindowFinished()
 
 void UAIParryGameplayAbility::OnHitReceived(FGameplayEventData Payload)
 {
-	// HitReact (triggered via AbilityTriggers) has already run by the time this generic
-	// listener fires, so the State_Blocking + State_Parry tags have been consumed for
-	// routing. Safe to tear down here and free the BT.
 	if (!IsActive()) return;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }

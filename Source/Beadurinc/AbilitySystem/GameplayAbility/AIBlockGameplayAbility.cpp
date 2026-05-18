@@ -2,6 +2,8 @@
 
 #include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_WaitDelay.h"
+#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "AbilitySystem/GameplayTag/GameplayEventTags.h"
 #include "AbilitySystem/GameplayTag/StateGameplayTags.h"
 #include "Actor/Character/FighterCharacter.h"
 
@@ -24,8 +26,21 @@ void UAIBlockGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle H
 
 	if (IsValid(BlockMontage)) Fighter->PlayAnimMontage(BlockMontage);
 
-	UAbilityTask_WaitDelay* AT_WaitDelay = UAbilityTask_WaitDelay::WaitDelay(this, BlockDuration);
-	AT_WaitDelay->OnFinish.AddDynamic(this, &UAIBlockGameplayAbility::OnBlockDurationFinished);
+	// Early-out: end as soon as a hit is consumed during the window so the BT isn't blocked waiting.
+	// OnlyTriggerOnce=true so the task auto-cancels itself after a single event.
+	UAbilityTask_WaitGameplayEvent* AT_WaitHit = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+		this,
+		GameplayEventTags::Event_Combat_Hit,
+		/*OptionalExternalTarget*/ nullptr,
+		/*OnlyTriggerOnce*/ true,
+		/*OnlyMatchExact*/ false
+	);
+	AT_WaitHit->EventReceived.AddDynamic(this, &UAIBlockGameplayAbility::OnHitReceived);
+	AT_WaitHit->ReadyForActivation();
+	
+	// Timeout: ability persists at least this amount of time to prevent block spamming
+	UAbilityTask_WaitDelay* AT_WaitDelay = UAbilityTask_WaitDelay::WaitDelay(this, LeastDuration);
+	AT_WaitDelay->OnFinish.AddDynamic(this, &UAIBlockGameplayAbility::OnExpired);
 	AT_WaitDelay->ReadyForActivation();
 }
 
@@ -36,7 +51,7 @@ void UAIBlockGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle
 	AFighterCharacter* Fighter = Cast<AFighterCharacter>(ActorInfo->AvatarActor.Get());
 	if (!Fighter) return;
 
-	if (IsValid(BlockMontage)) Fighter->StopAnimMontage(BlockMontage);
+	//if (IsValid(BlockMontage)) Fighter->StopAnimMontage(BlockMontage);
 
 	UAbilitySystemComponent* ASC = Fighter->GetAbilitySystemComponent();
 	if (!ASC) return;
@@ -47,7 +62,13 @@ void UAIBlockGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle
 	}
 }
 
-void UAIBlockGameplayAbility::OnBlockDurationFinished()
+void UAIBlockGameplayAbility::OnExpired()
+{
+	if (!IsActive()) return;
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+}
+
+void UAIBlockGameplayAbility::OnHitReceived(FGameplayEventData Payload)
 {
 	if (!IsActive()) return;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);

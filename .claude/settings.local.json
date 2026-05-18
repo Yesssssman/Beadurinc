@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(\"/c/Program Files/Epic Games/UE_5.7/Engine/Build/BatchFiles/Build.bat\" BeadurincEditor Win64 Development -Project=\"C:\\\\Users\\\\yesman\\\\Documents\\\\Unreal Projects\\\\Beadurinc\\\\Beadurinc.uproject\" -WaitMutex)",
-      "Bash(cmd.exe /c '\"C:\\\\Program Files\\\\Epic Games\\\\UE_5.7\\\\Engine\\\\Build\\\\BatchFiles\\\\Build.bat\" BeadurincEditor Win64 Development -Project=\"C:\\\\Users\\\\yesman\\\\Documents\\\\Unreal Projects\\\\Beadurinc\\\\Beadurinc.uproject\" -WaitMutex')",
-      "PowerShell(& \"C:\\\\Program Files\\\\Epic Games\\\\UE_5.7\\\\Engine\\\\Build\\\\BatchFiles\\\\Build.bat\" BeadurincEditor Win64 Development -Project=\"C:\\\\Users\\\\yesman\\\\Documents\\\\Unreal Projects\\\\Beadurinc\\\\Beadurinc.uproject\" -WaitMutex 2>&1 | Select-Object -Last 80)"
-    ]
-  }
-}
