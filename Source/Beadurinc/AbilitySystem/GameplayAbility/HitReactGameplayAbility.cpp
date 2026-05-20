@@ -65,9 +65,15 @@ void UHitReactGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	
 	// Save whether the attack was parried
 	bool Parried = false;
-	
-	// Check blocking is possible
+
+	// Verify the attack comes from the owner's front side.
+	const FVector OwnerForward2D = OwnerCharacter->GetActorForwardVector().GetSafeNormal2D();
+	const FVector ToAttacker2D = (Attacker->GetActorLocation() - OwnerCharacter->GetActorLocation()).GetSafeNormal2D();
+	const bool bAttackFromFront = FVector::DotProduct(OwnerForward2D, ToAttacker2D) > 0.0F;
+
+	// Check blocking is possible. Back attacks cannot be blocked or parried.
 	if (
+		bAttackFromFront &&
 		OwnerACS->HasMatchingGameplayTag(StateGameplayTags::State_Blocking) &&
 		MetaData->DangerAttackTypeTag != AttackTypeTags::AttackType_LowAttack && // Can't guard low attacks
 		(MetaData->DangerAttackTypeTag != AttackTypeTags::AttackType_Pierce || OwnerACS->HasMatchingGameplayTag(StateGameplayTags::State_Parry)) // Can't guard pierce attack without parrying
@@ -144,18 +150,11 @@ void UHitReactGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 		else
 		{
 			TObjectPtr<UAnimMontage>* StunMontage = OnHit.Find(MetaData->StunTag);
-		
+
 			// Play hit stun montage
 			if (StunMontage && IsValid(*StunMontage))
 			{
 				OwnerCharacter->PlayAnimMontage(*StunMontage);
-				
-				// Early application of state tags
-				FGameplayTagContainer TagContainer;
-				TagContainer.AddTag(StateGameplayTags::State_ComboLocked);
-				TagContainer.AddTag(StateGameplayTags::State_BlockingLocked);
-				TagContainer.AddTag(StateGameplayTags::State_RollingLocked);
-				OwnerACS->AddLooseGameplayTags(TagContainer);
 			}
 		}
 		

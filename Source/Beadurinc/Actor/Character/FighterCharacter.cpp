@@ -10,6 +10,7 @@
 #include "AbilitySystem/GameplayAbility/HitReactGameplayAbility.h"
 #include "AbilitySystem/GameplayTag/StateGameplayTags.h"
 #include "Animation/AnimMetaData.h"
+#include "Animation/AnimNotify/StateWindowAnimNotifyState.h"
 
 AFighterCharacter::AFighterCharacter()
 {
@@ -198,4 +199,23 @@ void AFighterCharacter::ApplyStaminaRegenCooldown()
 void AFighterCharacter::GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const
 {
 	GetAbilitySystemComponent()->GetOwnedGameplayTags(TagContainer);
+}
+
+void AFighterCharacter::AddState(const int32& MontageInstanceId, const FGameplayTag& StateTag)
+{
+	// Important! the previous *MontageInstanceId* will be overwritten.
+	// This is intended behavior to prevent the previous montage retrieving state tag.
+	StateOwner.Add(StateTag, MontageInstanceId);
+	
+	if (!AbilitySystemComponent->HasMatchingGameplayTag(StateTag)) AbilitySystemComponent->AddLooseGameplayTag(StateTag);
+}
+
+void AFighterCharacter::RemoveState(const int32& MontageInstanceId, const FGameplayTag& StateTag)
+{
+	// Core rule: ONLY retrieve state tag if the animation notify owner is who assigned the tag.
+	if (*StateOwner.Find(StateTag) == MontageInstanceId)
+	{
+		StateOwner.Remove(StateTag);
+		if (AbilitySystemComponent->HasMatchingGameplayTag(StateTag)) AbilitySystemComponent->RemoveLooseGameplayTag(StateTag);
+	}
 }

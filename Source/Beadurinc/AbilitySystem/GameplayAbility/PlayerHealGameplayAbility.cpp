@@ -1,9 +1,10 @@
 #include "AbilitySystem/GameplayAbility/PlayerHealGameplayAbility.h"
 
 #include "RollGameplayAbility.h"
-#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "AbilitySystem/GameplayTag/StateGameplayTags.h"
 #include "GameData/BeadurincPlayerState.h"
+#include "AbilitySystemComponent.h"
+#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 
 UPlayerHealGameplayAbility::UPlayerHealGameplayAbility()
 {
@@ -32,21 +33,18 @@ void UPlayerHealGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandl
 	{
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
 	}
-	
-	UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get();
-	ASC->AddLooseGameplayTag(StateGameplayTags::State_ComboLocked);
-	
+
 	UAbilityTask_PlayMontageAndWait* AT = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 		this,
 		TEXT("Healing"),
 		HealAnimMontage
 	);
-	
+
 	AT->OnCompleted.AddDynamic(this, &UPlayerHealGameplayAbility::MontageEnds);
 	AT->OnInterrupted.AddDynamic(this, &UPlayerHealGameplayAbility::MontageEnds);
 	AT->OnCancelled.AddDynamic(this, &UPlayerHealGameplayAbility::MontageEnds);
 	AT->OnBlendOut.AddDynamic(this, &UPlayerHealGameplayAbility::MontageEnds);
-	
+
 	AT->ReadyForActivation();
 }
 

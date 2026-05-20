@@ -54,3 +54,4 @@ void AMonsterCharacter::ModifyBlackboardScore(const FName& BlackboardKeyName, co
 	
 	BlackboardComponent->SetValueAsInt(BlackboardKeyName, NextScore);
 }
+

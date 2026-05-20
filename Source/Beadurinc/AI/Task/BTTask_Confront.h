@@ -14,9 +14,6 @@ struct FBTConfrontMemory
 	FVector MoveDirection;
 };
 
-/**
- * 
- */
 UCLASS()
 class BEADURINC_API UBTTask_Confront : public UBTTaskNode
 {

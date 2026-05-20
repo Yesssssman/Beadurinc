@@ -1,8 +1,8 @@
 #include "AbilitySystem/GameplayAbility/ComboAttackGameplayAbility.h"
-#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Actor/Character/PlayerCharacter.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "AbilitySystemComponent.h"
+#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "AbilitySystem/AbilityId.h"
 #include "AbilitySystem/GameplayTag/AbilityTags.h"
 #include "AbilitySystem/GameplayTag/StateGameplayTags.h"
@@ -58,7 +58,7 @@ void UComboAttackGameplayAbility::PlayNextComboAttack()
 
 	if (!IsValid(NextMontage)) return;
 
-	// Triggers by play montage ability task (activates until montage ends)
+	// Triggers by play montage ability task (activates until montage ends).
 	UAbilityTask_PlayMontageAndWait* AbilityTaskPlayMontage = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 		this,
 		TEXT("ComboAttack"),
@@ -70,11 +70,7 @@ void UComboAttackGameplayAbility::PlayNextComboAttack()
 	AbilityTaskPlayMontage->ReadyForActivation();
 	LastComboMontagePlayTask = AbilityTaskPlayMontage;
 
-	// Add combo lock state
-	CurrentActorInfo->AbilitySystemComponent->AddLooseGameplayTag(StateGameplayTags::State_ComboLocked);
-	
-	// Only the combo path advances the counter; dash is single-shot.
-	if (!bDashBranch)
+	if (!bJumpBranch && !bDashBranch)
 	{
 		ComboCounter = (ComboCounter + 1) % BCharacter->GetWeaponActor()->GetComboSequenceLength();
 	}
@@ -115,12 +111,11 @@ void UComboAttackGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHand
 	if (!OwnerACS) return;
 	
 	PlayNextComboAttack();
-	
+
 	// Cancel blocking ability if enabled
 	FGameplayTagContainer TargetTags;
 	TargetTags.AddTag(AbilityTags::Ability_BlockParry);
 	OwnerACS->CancelAbilities(&TargetTags);
-	OwnerACS->AddLooseGameplayTag(StateGameplayTags::State_BlockingLocked);
 	
 	// Apply stamina gen cooldown
 	if (AFighterCharacter* FighterCharacter = Cast<AFighterCharacter>(ActorInfo->AvatarActor.Get()))

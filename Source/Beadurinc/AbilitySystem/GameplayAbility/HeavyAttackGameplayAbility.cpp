@@ -1,6 +1,7 @@
 #include "AbilitySystem/GameplayAbility/HeavyAttackGameplayAbility.h"
 
 #include "AbilitySystemComponent.h"
+#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Actor/Character/PlayerCharacter.h"
 #include "Actor/WeaponActor.h"
 #include "AbilitySystem/GameplayTag/AbilityTags.h"
@@ -45,35 +46,31 @@ void UHeavyAttackGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHand
 		EndAbility(Handle, ActorInfo, ActivationInfo, false, true);
 		return;
 	}
-	
-	ASC->AddLooseGameplayTag(StateGameplayTags::State_ComboLocked);
-	
+
 	if (MontageTask)
 	{
 		// Force cancel of the old task to prevent calling `EndAbility` abnormally
 		MontageTask->ExternalCancel();
 	}
-	
+
 	MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 		this, TEXT("HeavyAttack"), Owner->GetWeaponActor()->GetHeavyAttack()
 	);
 
-	//
 	MontageTask->OnCompleted.AddDynamic(this, &UHeavyAttackGameplayAbility::OnMontageCompleted);
 	MontageTask->OnBlendOut.AddDynamic(this, &UHeavyAttackGameplayAbility::OnMontageCompleted);
-	//
+
 	MontageTask->OnInterrupted.AddDynamic(this, &UHeavyAttackGameplayAbility::OnMontageInterrupted);
 	MontageTask->OnCancelled.AddDynamic(this, &UHeavyAttackGameplayAbility::OnMontageInterrupted);
-	
+
 	MontageTask->ReadyForActivation();
-	
+
 	Owner->ClearInputBuffer();
-	
-	// Same side-effects as Combo: cancel block, lock blocking, eat stamina regen.
+
+	// Same side-effects as Combo: cancel block, eat stamina regen.
 	FGameplayTagContainer BlockTags;
 	BlockTags.AddTag(AbilityTags::Ability_BlockParry);
 	ASC->CancelAbilities(&BlockTags);
-	ASC->AddLooseGameplayTag(StateGameplayTags::State_BlockingLocked);
 	
 	if (AFighterCharacter* Fighter = Cast<AFighterCharacter>(Owner))
 	{

@@ -4,7 +4,7 @@
 #include "Abilities/GameplayAbility.h"
 #include "PlayerHealGameplayAbility.generated.h"
 
-class UAbilityTask_PlayMontageAndWait;
+class UAbilityTask_PlayMontageAndTriggerZeroNotifies;
 
 UCLASS()
 class BEADURINC_API UPlayerHealGameplayAbility : public UGameplayAbility

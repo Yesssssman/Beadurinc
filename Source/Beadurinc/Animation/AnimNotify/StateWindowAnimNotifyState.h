@@ -5,6 +5,7 @@
 #include "Animation/AnimNotifies/AnimNotifyState.h"
 #include "StateWindowAnimNotifyState.generated.h"
 
+class AFighterCharacter;
 /**
  * A notify state for determining a character's state by FGameplayTag.
  *
@@ -15,15 +16,17 @@ UCLASS()
 class BEADURINC_API UStateWindowAnimNotifyState : public UAnimNotifyState
 {
 	GENERATED_BODY()
-
-protected:
-
-	virtual void NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference) override;
-
-	virtual void NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
-
+	
+public:
+	
+	virtual void NotifyBegin(USkeletalMeshComponent * MeshComp, UAnimSequenceBase * Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference) override;
+	virtual void NotifyEnd(USkeletalMeshComponent * MeshComp, UAnimSequenceBase * Animation, const FAnimNotifyEventReference& EventReference) override;
+	
+	virtual void BranchingPointNotifyBegin(FBranchingPointNotifyPayload& BranchingPointPayload) override;
+	virtual void BranchingPointNotifyEnd(FBranchingPointNotifyPayload& BranchingPointPayload) override;
+	
 private:
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "StateTag", meta = (AllowPrivateAccess = true))
 	FGameplayTagContainer StateTags;
 };

@@ -2,9 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "ComboAttackGameplayAbility.generated.h"
 
+class UAbilityTask_PlayMontageAndWait;
 class UAbilityTask_WaitGameplayEvent;
 
 UCLASS()

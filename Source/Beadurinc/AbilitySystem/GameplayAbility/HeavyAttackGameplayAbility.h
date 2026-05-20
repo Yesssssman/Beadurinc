@@ -2,9 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "HeavyAttackGameplayAbility.generated.h"
 
+class UAbilityTask_PlayMontageAndWait;
 /**
  * Single-shot heavy attack. Triggered by holding the attack key, implemented in
  * APlayerCharacter::SetupPlayerInputComponent via a separate Enhanced Input

@@ -76,9 +76,30 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ApplyStaminaRegenCooldown();
 	
-	/** UGameplayTagAssetInterface implementations*/
+	/** UGameplayTagAssetInterface implementations */
 	virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override;
 
+	/**
+	 * Record the state & state assignee montage id.
+	 * 
+	 * Previous assignee will be overwritten.
+	 * 
+	 * @param MontageInstanceId assignee montage instance ID
+	 * @param StateTag			assigned tag
+	 */
+	void AddState(const int32& MontageInstanceId, const FGameplayTag& StateTag);
+
+	/**
+	 * Remove applied state gameplay tag if assignee matches with the recorded id.
+	 * 
+	 * If they don't match, it means another assignee already overwrite that tag,
+	 * so removal doesn't happen.
+	 * 
+	 * @param MontageInstanceId assignee montage instance ID
+	 * @param StateTag 			assigned tag
+	 */
+	void RemoveState(const int32& MontageInstanceId, const FGameplayTag& StateTag);
+	
 private:
 
 	/** Spawn a weapon actor to skeletal mesh socket if `WeaponActorBlueprint` is valid */
@@ -90,6 +111,13 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Equipments", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<AWeaponActor> WeaponActorBlueprint;
 
+	/**
+	 * Saved info about Assigned gameplay tag & Assignee for `StateWindowAnimNotifyState`.
+	 * 
+	 * int32 key represents montage instance ID
+	 */
+	TMap<FGameplayTag, int32> StateOwner;
+	
 protected:
 
 	/** Gameplay Ability class for Hit React */

@@ -51,8 +51,6 @@ void UAIBlockGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle
 	AFighterCharacter* Fighter = Cast<AFighterCharacter>(ActorInfo->AvatarActor.Get());
 	if (!Fighter) return;
 
-	//if (IsValid(BlockMontage)) Fighter->StopAnimMontage(BlockMontage);
-
 	UAbilitySystemComponent* ASC = Fighter->GetAbilitySystemComponent();
 	if (!ASC) return;
 

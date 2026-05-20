@@ -36,8 +36,8 @@ void UBlockParryGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandl
 {
 	AFighterCharacter* Fighter = Cast<AFighterCharacter>(ActorInfo->AvatarActor.Get());
 	if (!Fighter) return;
-	
-	// Add state tags
+
+	// Add block & parry state tags
 	Fighter->GetAbilitySystemComponent()->AddLooseGameplayTag(StateGameplayTags::State_Blocking);
 	Fighter->GetAbilitySystemComponent()->AddLooseGameplayTag(StateGameplayTags::State_Parry);
 	

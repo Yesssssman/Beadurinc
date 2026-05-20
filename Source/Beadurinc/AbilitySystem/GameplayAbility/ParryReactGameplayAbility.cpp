@@ -40,12 +40,7 @@ void UParryReactGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandl
 		// Plays a stagger animation caused by no stamina if the owner hasn't parried the incomed attack
 		if (Stagger && LivingAttributes->GetStamina() <= 0.0F)
 		{
-			// Transient state assigment to prevent buffered inputs are activated, must be resolved by notify states
-			// This is because anim notify state doesn't immediately call "notify begin" at frame time 0 as soon as montage is played. 
-			ActorInfo->AbilitySystemComponent->AddLooseGameplayTag(StateGameplayTags::State_ComboLocked);
-			ActorInfo->AbilitySystemComponent->AddLooseGameplayTag(StateGameplayTags::State_BlockingLocked);
-			
-			ActorInfo->AbilitySystemComponent->PlayMontage(this, ActivationInfo, Stagger, 1.0F);
+			OwnerCharacter->PlayAnimMontage(Stagger);
 			
 			FGameplayCueParameters CueParams;
 			CueParams.Instigator = ActorInfo->AvatarActor;
@@ -77,12 +72,7 @@ void UParryReactGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandl
 		UAttackMetaData* AttackAnimMetaData = Cast<UAttackMetaData>(ComboMetaData);
 		if (!AttackAnimMetaData || !AttackAnimMetaData->OnParried) continue;
 		
-		// Transient state assigment to prevent buffered inputs are activated, must be resolved by notify states.
-		// This is because anim notify state doesn't immediately call "notify begin" at frame time 0 as soon as montage is played. 
-		ActorInfo->AbilitySystemComponent->AddLooseGameplayTag(StateGameplayTags::State_ComboLocked);
-		ActorInfo->AbilitySystemComponent->AddLooseGameplayTag(StateGameplayTags::State_BlockingLocked);
-		
-		ActorInfo->AbilitySystemComponent->PlayMontage(this, ActivationInfo, AttackAnimMetaData->OnParried, 1.0F);
+		OwnerCharacter->PlayAnimMontage(AttackAnimMetaData->OnParried);
 	}
 	
 	// Gives combat feedbacks to each character: owner was offended, situation went bad for owner, good for enemy.

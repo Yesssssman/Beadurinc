@@ -44,7 +44,7 @@ public:
 	void ModifyBlackboardScore(const FName& BlackboardKeyName, const int& BaseScore, const int& Distribution);
 	
 protected:
-
+	
 	/** Grants AI-only abilities (block / parry) on the authoritative side. */
 	virtual void BeginPlay() override;
 	
