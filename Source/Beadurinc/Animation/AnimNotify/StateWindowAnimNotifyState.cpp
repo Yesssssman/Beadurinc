@@ -1,5 +1,5 @@
-#include "Actor/Character/FighterCharacter.h"
 #include "Animation/AnimNotify/StateWindowAnimNotifyState.h"
+#include "Actor/Character/FighterCharacter.h"
 
 void UStateWindowAnimNotifyState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
