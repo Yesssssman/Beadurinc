@@ -1,0 +1,2 @@
+#include "GameData/BeadurincGameInstance.h"
+
