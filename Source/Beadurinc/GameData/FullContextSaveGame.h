@@ -4,12 +4,6 @@
 #include "GameFramework/SaveGame.h"
 #include "FullContextSaveGame.generated.h"
 
-struct FSaveMetadata
-{
-	FString LastWorld;
-	FDateTime LastPlayed;
-};
-
 /**
  * `SaveGame` that holds full context of the game progression
  */

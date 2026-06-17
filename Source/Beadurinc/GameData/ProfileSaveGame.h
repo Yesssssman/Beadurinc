@@ -16,6 +16,9 @@ struct FGameProfile
 	FDateTime LastPlayed;
 };
 
+/**
+ * Compact game save metadata that holds each saved campaigns in an array
+ */
 UCLASS()
 class BEADURINC_API UProfileSaveGame : public USaveGame
 {
