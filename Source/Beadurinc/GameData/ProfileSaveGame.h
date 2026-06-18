@@ -10,6 +10,9 @@ struct FGameProfile
 	GENERATED_BODY()
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	FString SaveName;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	FString LastWorld;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)

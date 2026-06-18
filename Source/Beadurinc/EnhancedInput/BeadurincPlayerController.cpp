@@ -65,6 +65,15 @@ void ABeadurincPlayerController::BeginPlay()
 	}
 }
 
+void ABeadurincPlayerController::BeginSpectatingState()
+{
+	Super::BeginSpectatingState();
+	
+	FInputModeUIOnly InputMode;
+	SetInputMode(InputMode);
+	SetShowMouseCursor(true);
+}
+
 void ABeadurincPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
@@ -109,6 +118,13 @@ void ABeadurincPlayerController::OnPossess(APawn* InPawn)
 		{
 			BeadurincHUD->InitPlayer(PlayerCharacter);
 		}
+	}
+	
+	if (Cast<APlayerCharacter>(InPawn))
+	{
+		FInputModeGameOnly InputMode;
+		SetInputMode(InputMode);
+		SetShowMouseCursor(false);
 	}
 }
 

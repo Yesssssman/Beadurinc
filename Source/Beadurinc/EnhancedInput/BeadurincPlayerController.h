@@ -41,6 +41,9 @@ protected:
 	/** Gameplay initialization */
 	virtual void BeginPlay() override;
 
+	/** Called on begin play with spectating mode */
+	virtual void BeginSpectatingState() override;
+	
 	/** Input mapping context setup */
 	virtual void SetupInputComponent() override;
 
