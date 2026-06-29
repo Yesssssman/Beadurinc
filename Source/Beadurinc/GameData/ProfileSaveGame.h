@@ -9,14 +9,17 @@ struct FGameProfile
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Save Data")
 	FString SaveName;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Save Data")
 	FString LastWorld;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Save Data")
 	FDateTime LastPlayed;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Save Data")
+	int64 TotalPlayTime;
 };
 
 /**
