@@ -30,9 +30,18 @@ class BEADURINC_API UProfileSaveGame : public USaveGame
 {
 	GENERATED_BODY()
 	
+public:
+	
+	void PushNewGameProfile(FString WorldName);
+	
+	void DeleteProfileAt(const int32& Index);
+	
 private:
 	
 	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, meta = (AllowPrivateAccess = true))
 	TArray<FGameProfile> Profiles;
 	
+	/** Counter for the number of the games that user have created. Used for determining savegame slot name */
+	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, meta = (AllowPrivateAccess = true))
+	int Seq;
 };
