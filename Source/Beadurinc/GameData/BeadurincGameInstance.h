@@ -27,6 +27,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Game Save")
 	void LoadGame(const FString& SlotName);
 	
+	UFUNCTION(BlueprintCallable, Category = "Game Save")
+	void SaveProgression();
+	
 private:
 	
 	/** Array of saved game profiles(metadata) */

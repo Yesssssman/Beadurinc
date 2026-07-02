@@ -1,5 +1,6 @@
 #include "GameData/BeadurincGameInstance.h"
 
+#include "FullContextSaveGame.h"
 #include "ProfileSaveGame.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -22,16 +23,34 @@ UBeadurincGameInstance::UBeadurincGameInstance()
 void UBeadurincGameInstance::CreateNewGame(const FString& SlotName, const FString& WorldName)
 {
 	GameProfiles->PushNewGameProfile(WorldName);
-	
-	
 }
 
 void UBeadurincGameInstance::DeleteSavedGame(const FString& SlotName)
 {
-	
+	GameProfiles->DeleteSavedProfile(SlotName);
 }
 
 void UBeadurincGameInstance::LoadGame(const FString& SlotName)
 {
+	UFullContextSaveGame* CampaignSave = CastChecked<UFullContextSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
+	
+	// This is a case where game only created but hasn't ever loaded.
+	if (!IsValid(CampaignSave))
+	{
+		CampaignSave = CastChecked<UFullContextSaveGame>(UGameplayStatics::CreateSaveGameObject(UFullContextSaveGame::StaticClass()));
+		UGameplayStatics::SaveGameToSlot(CampaignSave, SlotName, 0);
+	}
+	
+	//UGameplayStatics::OpenLevel(nullptr, CampaignSave);
+}
+
+void UBeadurincGameInstance::SaveProgression()
+{
+	if (ActivatedSaveGameSlotName.IsEmpty())
+	{
+		// No game has loaded. Skip.
+		return;
+	}
+	
 	
 }

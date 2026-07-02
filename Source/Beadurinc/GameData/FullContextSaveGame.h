@@ -16,7 +16,7 @@ public:
 	
 	UFullContextSaveGame();
 	
-private:
+public:
 	
 	UPROPERTY(VisibleAnywhere, Category = Basic)
 	FString RecentWorld;

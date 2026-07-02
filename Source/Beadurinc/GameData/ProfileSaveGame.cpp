@@ -3,7 +3,7 @@
 #include "FullContextSaveGame.h"
 #include "Kismet/GameplayStatics.h"
 
-void UProfileSaveGame::PushNewGameProfile(FString WorldName)
+FString& UProfileSaveGame::PushNewGameProfile(const FString& WorldName)
 {
 	Seq++;
 	
@@ -11,10 +11,21 @@ void UProfileSaveGame::PushNewGameProfile(FString WorldName)
 		UGameplayStatics::CreateSaveGameObject(UFullContextSaveGame::StaticClass())
 	);
 	
-	UGameplayStatics::SaveGameToSlot(GameProfiles, GameProfileSlotName, 0);
+	FullContextSaveGame->RecentWorld = FString("Lobby");
+	
+	FString SlotName = FString("Campaign" + Seq);
+	FullContextSaveGame->SaveSlotName = SlotName;
+	
+	UGameplayStatics::SaveGameToSlot(FullContextSaveGame, SlotName, 0);
 }
 
-void UProfileSaveGame::DeleteProfileAt(const int32& Index)
+void UProfileSaveGame::DeleteSavedProfile(const FString& SaveSlotName)
 {
-	
+	for (FGameProfile& Profile : Profiles)
+	{
+		if (Profile.SaveSlotName.Equals(SaveSlotName))
+		{
+			UGameplayStatics::DeleteGameInSlot(SaveSlotName, 0);
+		}
+	}
 }
